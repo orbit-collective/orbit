@@ -261,13 +261,30 @@ useEffect(() => {
 </button>
 ```
 
-Dodaj odpowiadający prop `onSaveChannelName: (channelName: string) => void`, a w `WorkspaceSettingsIntegrationDetail.tsx` podłącz go do tego samego helpera `saveIntegrationSettings()`, którego już używa przycisk zapisu URL-a webhooka, tylko z innym kluczem w payloadzie:
+Dodaj odpowiadający prop `onSaveChannelName: (channelName: string) => void`. Helper zapisujący ustawienia przyjmuje tylko klucze, które zna, więc najpierw dodaj nowy klucz do typu jego payloadu w `resources/js/hooks/useIntegrationActions.ts`:
+
+```ts
+const saveIntegrationSettings = (
+    integrationId: IntegrationId,
+    data: {
+        webhook_url?: string;
+        channel_name?: string; // new
+        options?: Record<string, boolean>;
+    },
+) => {
+```
+
+Potem w `WorkspaceSettingsIntegrationDetail.tsx` przekaż callback do `WorkspaceSettingsIntegrationNotifyPanel` obok `onSaveWebhookUrl`, przez obiekt `actions`, który komponent już ma, i `integration`, który dostał:
 
 ```tsx
-onSaveChannelName={(channelName) => {
-    if (!openIntegration) return;
-    saveIntegrationSettings(openIntegration.id, { channel_name: channelName });
-}}
+<WorkspaceSettingsIntegrationNotifyPanel
+    // ...the props it already gets
+    onSaveChannelName={(channelName) =>
+        actions.saveIntegrationSettings(integration.id, {
+            channel_name: channelName,
+        })
+    }
+/>
 ```
 
 ### B7 — testy
