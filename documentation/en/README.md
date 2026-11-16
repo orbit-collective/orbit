@@ -118,6 +118,10 @@ documentation/
       README.md              <- index for this category
       01-add-a-new-issue-view.md
       02-load-view-data-lazily.md
+    development-view/
+      README.md              <- index for this category
+      01-add-a-development-read-model.md
+      02-link-issues-to-pull-requests.md
     rich-text-editor/
       README.md              <- index for this category
       01-add-a-new-tiptap-extension.md
@@ -195,6 +199,7 @@ documentation/
     dashboard/               <- Polish translation of every guide above
     issue-types/             <- Polish translation of every guide above
     issue-views/             <- Polish translation of every guide above
+    development-view/        <- Polish translation of every guide above
     rich-text-editor/        <- Polish translation of every guide above
     backup/                  <- Polish translation of every guide above
     project-onboarding/      <- Polish translation of every guide above
