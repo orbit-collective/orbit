@@ -39,6 +39,10 @@ return [
                     'name' => 'Activity',
                     'description' => 'A chronological feed of all issue activity.',
                 ],
+                'Development' => [
+                    'name' => 'Development',
+                    'description' => 'Pull requests, CI, commits and branches from GitHub.',
+                ],
             ],
         ],
         'theme' => [

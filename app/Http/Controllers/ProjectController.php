@@ -298,6 +298,7 @@ class ProjectController extends Controller
                 'createBranch' => $project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_CREATE),
             ],
             'githubLinked' => $user->github_id !== null,
+            'canConfigure' => $project->hasPermission($user, Permission::INTEGRATIONS_UPDATE),
         ];
     }
 }

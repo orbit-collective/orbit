@@ -13,6 +13,7 @@ return [
         'board' => 'Board view',
         'calendar' => 'Calendar view',
         'activity' => 'Activity view',
+        'development' => 'Development view',
     ],
     'view_keyword' => 'view',
     'search_issues' => [
@@ -26,5 +27,6 @@ return [
         'board' => 'Board',
         'calendar' => 'Calendar',
         'activity' => 'Activity Logs',
+        'development' => 'Development',
     ],
 ];

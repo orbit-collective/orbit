@@ -898,6 +898,8 @@ export interface MainLayoutProps {
     projects: Project[];
     project: Project;
     users: AssignableUser[];
+    /** Whether the user may open the project's Development view (its tab and shortcut). */
+    developmentEnabled?: boolean;
 }
 export interface GuestLayoutProps {
     children: ReactNode;

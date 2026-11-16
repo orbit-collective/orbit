@@ -24,6 +24,7 @@ vi.mock('@/Layouts/MainLayout', () => ({
         project,
         projects,
         users,
+        developmentEnabled,
     }: {
         children: React.ReactNode;
         selectedLook: IssuePageLooks;
@@ -31,9 +32,11 @@ vi.mock('@/Layouts/MainLayout', () => ({
         project: Project;
         projects: Project[];
         users: AssignableUser[];
+        developmentEnabled?: boolean;
     }) => (
         <div
             data-testid="main-layout"
+            data-development-enabled={String(developmentEnabled)}
             data-selected-look={selectedLook}
             data-project-name={project.name}
             data-projects-count={projects.length}
@@ -47,6 +50,9 @@ vi.mock('@/Layouts/MainLayout', () => ({
             </button>
             <button onClick={() => setSelectedLook('Calendar')}>
                 Switch to Calendar
+            </button>
+            <button onClick={() => setSelectedLook('Development')}>
+                Switch to Development
             </button>
             {children}
         </div>
@@ -135,6 +141,19 @@ vi.mock('@/Components/Organisms/IssueBoard/IssueBoard', () => ({
 const mockReload = vi.fn();
 vi.mock('@inertiajs/react', () => ({
     router: { reload: (...args: unknown[]) => mockReload(...args) },
+}));
+
+vi.mock('@/Components/Organisms/DevelopmentView/DevelopmentView', () => ({
+    default: ({
+        development,
+    }: {
+        development: { repositories: unknown[] };
+    }) => (
+        <div
+            data-testid="development-view"
+            data-repositories-count={development.repositories.length}
+        />
+    ),
 }));
 
 vi.mock('@/Components/Organisms/CalendarView/CalendarView', () => ({
@@ -549,5 +568,86 @@ describe('Projects Show Page', () => {
         // Page links must not remount Show, or the Activity view would reset to the default look.
         expect(pagination).toHaveAttribute('data-preserve-state', 'true');
         expect(screen.queryByTestId('filter-bar')).not.toBeInTheDocument();
+    });
+
+    describe('Development view', () => {
+        const overview = {
+            connected: true,
+            repositories: [{ id: 1, owner: 'orbit-collective', name: 'orbit' }],
+            abilities: { manage: true, createBranch: true },
+            githubLinked: true,
+            canConfigure: true,
+        };
+        const renderShow = (development?: typeof overview | null) =>
+            render(
+                <Show
+                    project={makeProject()}
+                    issues={makePaginated([])}
+                    projects={[]}
+                    savedFilters={[]}
+                    users={[]}
+                    activityLogs={makePaginated([])}
+                    development={development}
+                />,
+            );
+
+        test('shows the Development view, without the filter bar, once it is chosen', async () => {
+            const user = userEvent.setup();
+            renderShow(overview);
+
+            expect(screen.getByTestId('main-layout')).toHaveAttribute(
+                'data-development-enabled',
+                'true',
+            );
+            await user.click(
+                screen.getByRole('button', { name: 'Switch to Development' }),
+            );
+
+            expect(screen.getByTestId('development-view')).toHaveAttribute(
+                'data-repositories-count',
+                '1',
+            );
+            expect(screen.queryByTestId('filter-bar')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('issue-table')).not.toBeInTheDocument();
+        });
+
+        test('opens on the remembered Development view', () => {
+            localStorage.setItem('selectedLook', 'Development');
+            renderShow(overview);
+
+            expect(screen.getByTestId('development-view')).toBeInTheDocument();
+            expect(liveMocks.useProjectLive).toHaveBeenLastCalledWith(
+                1,
+                'Development',
+                expect.anything(),
+            );
+        });
+
+        test('a remembered Development view falls back to the list for someone who may not open it', () => {
+            localStorage.setItem('selectedLook', 'Development');
+            renderShow(null);
+
+            expect(screen.getByTestId('issue-table')).toBeInTheDocument();
+            expect(
+                screen.queryByTestId('development-view'),
+            ).not.toBeInTheDocument();
+            expect(screen.getByTestId('main-layout')).toHaveAttribute(
+                'data-development-enabled',
+                'false',
+            );
+            expect(screen.getByTestId('main-layout')).toHaveAttribute(
+                'data-selected-look',
+                'List',
+            );
+        });
+
+        test('the view is off when the page sends no development prop', () => {
+            renderShow(undefined);
+
+            expect(screen.getByTestId('main-layout')).toHaveAttribute(
+                'data-development-enabled',
+                'false',
+            );
+        });
     });
 });

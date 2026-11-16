@@ -333,4 +333,46 @@ describe('MainLayout Component', () => {
 
         expect(document.getElementById('global-search-input')).toHaveFocus();
     });
+
+    test('has no Development tab or shortcut unless the user may open it', () => {
+        const setSelectedLook = vi.fn();
+        renderWithShortcuts(
+            <MainLayout
+                selectedLook="List"
+                setSelectedLook={setSelectedLook}
+                projects={[]}
+                project={makeProject()}
+                users={[]}
+            >
+                <div>Page content</div>
+            </MainLayout>,
+        );
+
+        expect(screen.queryByTestId('tab-Development')).not.toBeInTheDocument();
+        fireEvent.keyDown(window, { key: '5' });
+        expect(setSelectedLook).not.toHaveBeenCalled();
+    });
+
+    test('adds the Development tab and the "5" shortcut when it is enabled', () => {
+        const setSelectedLook = vi.fn();
+        renderWithShortcuts(
+            <MainLayout
+                selectedLook="List"
+                setSelectedLook={setSelectedLook}
+                projects={[]}
+                project={makeProject()}
+                users={[]}
+                developmentEnabled
+            >
+                <div>Page content</div>
+            </MainLayout>,
+        );
+
+        fireEvent.click(screen.getByTestId('tab-Development'));
+        expect(setSelectedLook).toHaveBeenCalledWith('Development');
+
+        setSelectedLook.mockClear();
+        fireEvent.keyDown(window, { key: '5' });
+        expect(setSelectedLook).toHaveBeenCalledWith('Development');
+    });
 });

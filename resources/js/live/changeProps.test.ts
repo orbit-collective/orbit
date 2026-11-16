@@ -83,8 +83,28 @@ describe('projectPageReloads', () => {
         ).toEqual([{ only: ['activityLogs'] }]);
     });
 
+    test('the development view reads its data over its own routes, so an issue change re-reads no prop', () => {
+        expect(
+            projectPageReloads(
+                [change('issue'), change('comment')],
+                'Development',
+                null,
+            ),
+        ).toEqual([]);
+        // What its page props still show (the project, its settings) stays current.
+        expect(
+            projectPageReloads([change('labels', null)], 'Development', null),
+        ).toEqual([{ only: ['labels'] }]);
+    });
+
     test('a membership or role change re-reads the whole page', () => {
-        for (const view of ['List', 'Board', 'Calendar', 'Activity'] as const) {
+        for (const view of [
+            'List',
+            'Board',
+            'Calendar',
+            'Activity',
+            'Development',
+        ] as const) {
             expect(
                 projectPageReloads([change('members', null)], view, null),
             ).toEqual([{}]);
@@ -250,6 +270,16 @@ describe('fallback reloads', () => {
         expect(projectPageFallbackReloads('Activity', null)).toEqual([
             { only: ['activityLogs', ...SETTINGS_AND_ACCESS] },
         ]);
+    });
+
+    test('the development view re-reads the settings but never the issues', () => {
+        const reloads = projectPageFallbackReloads('Development', null);
+
+        expect(reloads).toHaveLength(1);
+        expect(reloads[0].only).toContain('project');
+        expect(reloads.flatMap((reload) => reload.only ?? [])).not.toContain(
+            'issues',
+        );
     });
 
     test('an issue page re-reads the issue, its settings and access, and the feed only when open', () => {

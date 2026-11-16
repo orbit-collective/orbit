@@ -39,6 +39,10 @@ return [
                     'name' => 'Aktywność',
                     'description' => 'Chronologiczny strumień całej aktywności w zgłoszeniach.',
                 ],
+                'Development' => [
+                    'name' => 'Development',
+                    'description' => 'Pull requesty, CI, commity i gałęzie z GitHuba.',
+                ],
             ],
         ],
         'theme' => [

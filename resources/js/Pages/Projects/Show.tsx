@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
 import CalendarView from '@/Components/Organisms/CalendarView/CalendarView';
+import DevelopmentView from '@/Components/Organisms/DevelopmentView/DevelopmentView';
 import FilterBar from '@/Components/Organisms/FilterBar/FilterBar';
 import IssueBoard from '@/Components/Organisms/IssueBoard/IssueBoard';
 import IssueTable from '@/Components/Organisms/IssueTable/IssueTable';
@@ -15,6 +16,7 @@ import { SavedFilter } from '@/hooks/useSavedFilters';
 import MainLayout from '@/Layouts/MainLayout';
 import { useProjectLive } from '@/live/useProjectLive';
 import { ActivityLogEntry } from '@/types/ActivityLog';
+import { DevelopmentOverview } from '@/types/Development';
 import {
     Issue,
     IssueAbilities,
@@ -65,6 +67,7 @@ export default function Show({
     nextIssueId = null,
     issueAbilities,
     projectRole = null,
+    development = null,
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
@@ -83,6 +86,8 @@ export default function Show({
     nextIssueId?: number | null;
     issueAbilities?: IssueAbilities;
     projectRole?: string | null;
+    /** What the Development view starts from; null when the user may not open it. */
+    development?: DevelopmentOverview | null;
 }) {
     const { t } = useLaravelReactI18n();
     const [filterPanelOpen, setFilterPanelOpen] = useState(false);
@@ -93,7 +98,8 @@ export default function Show({
                 saved === 'List' ||
                 saved === 'Board' ||
                 saved === 'Calendar' ||
-                saved === 'Activity'
+                saved === 'Activity' ||
+                saved === 'Development'
             ) {
                 return saved;
             }
@@ -101,10 +107,15 @@ export default function Show({
         return 'List';
     });
 
+    // A remembered Development view means nothing to someone who may not open it.
+    const look: IssuePageLooks =
+        selectedLook === 'Development' && !development ? 'List' : selectedLook;
+    const ownDataLook = look === 'Activity' || look === 'Development';
+
     const calendarRange = useRef<[string, string] | null>(null);
 
     // Other people's changes re-read only what the visible view shows.
-    useProjectLive(project.id, selectedLook, calendarRange);
+    useProjectLive(project.id, look, calendarRange);
 
     const loadCalendar = useCallback((from: string, to: string) => {
         calendarRange.current = [from, to];
@@ -122,26 +133,27 @@ export default function Show({
         if (
             calendarWasLoaded.current &&
             !calendarLoaded &&
-            selectedLook === 'Calendar' &&
+            look === 'Calendar' &&
             calendarRange.current
         ) {
             loadCalendar(...calendarRange.current);
         }
         calendarWasLoaded.current = calendarLoaded;
-    }, [calendarLoaded, selectedLook, loadCalendar]);
+    }, [calendarLoaded, look, loadCalendar]);
 
     return (
         <ProjectLabelsProvider labels={labels}>
             <ProjectPrioritiesProvider priorities={priorities}>
                 <MainLayout
-                    selectedLook={selectedLook}
+                    selectedLook={look}
                     setSelectedLook={setSelectedLook}
+                    developmentEnabled={development !== null}
                     projects={projects}
                     project={project}
                     users={users}
                 >
                     <div className={'flex h-full flex-col'}>
-                        {selectedLook !== 'Activity' && (
+                        {!ownDataLook && (
                             <FilterBar
                                 queryParams={queryParams}
                                 project={project}
@@ -160,8 +172,7 @@ export default function Show({
                                 aria-hidden="true"
                                 className={cn(
                                     'pointer-events-none absolute inset-0 z-30 bg-black/10 backdrop-blur-[2px] transition-opacity duration-200 ease-out',
-                                    filterPanelOpen &&
-                                        selectedLook !== 'Activity'
+                                    filterPanelOpen && !ownDataLook
                                         ? 'opacity-100'
                                         : 'opacity-0',
                                 )}
@@ -173,7 +184,7 @@ export default function Show({
                             >
                                 <motion.div
                                     // Switching view fades the new one in.
-                                    key={selectedLook}
+                                    key={look}
                                     initial={{ opacity: 0, y: 8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{
@@ -182,7 +193,7 @@ export default function Show({
                                     }}
                                     className="flex min-h-0 flex-1 flex-col overflow-hidden"
                                 >
-                                    {selectedLook === 'List' ? (
+                                    {look === 'List' ? (
                                         <IssueTable
                                             issues={issues.data}
                                             queryParams={queryParams}
@@ -202,7 +213,7 @@ export default function Show({
                                                 />
                                             }
                                         />
-                                    ) : selectedLook === 'Board' ? (
+                                    ) : look === 'Board' ? (
                                         <>
                                             <div
                                                 className={
@@ -221,7 +232,7 @@ export default function Show({
                                                 queryParams={queryParams}
                                             />
                                         </>
-                                    ) : selectedLook === 'Calendar' ? (
+                                    ) : look === 'Calendar' ? (
                                         <div className="flex flex-1 flex-col gap-4 overflow-y-auto xl:flex-row xl:overflow-hidden">
                                             <CalendarView
                                                 issues={calendarIssues ?? []}
@@ -231,6 +242,12 @@ export default function Show({
                                                 issues={upcomingDeadlines ?? []}
                                             />
                                         </div>
+                                    ) : look === 'Development' &&
+                                      development ? (
+                                        <DevelopmentView
+                                            project={project}
+                                            development={development}
+                                        />
                                     ) : (
                                         <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4 lg:col-span-2">
                                             <div className="mb-2">

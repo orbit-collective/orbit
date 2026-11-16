@@ -156,3 +156,35 @@ describe('AccountSettingsPreferencesTab reduced motion', () => {
         expect(localStorage.getItem('reducedMotion')).toBe('false');
     });
 });
+
+describe('AccountSettingsPreferencesTab default view', () => {
+    beforeEach(() => {
+        localStorage.clear();
+    });
+
+    test('offers the Development view next to the four others and remembers the choice', async () => {
+        const user = userEvent.setup();
+        renderTab();
+
+        expect(
+            screen.getByRole('button', { name: /Development/ }),
+        ).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: /Development/ }));
+
+        expect(localStorage.setItem).toHaveBeenCalledWith(
+            'selectedLook',
+            'Development',
+        );
+    });
+
+    test('starts on the remembered Development view', () => {
+        localStorage.setItem('selectedLook', 'Development');
+        renderTab();
+
+        expect(
+            screen.getByText(
+                'Pull requests, CI, commits and branches from GitHub.',
+            ),
+        ).toBeInTheDocument();
+    });
+});

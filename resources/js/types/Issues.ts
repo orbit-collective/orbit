@@ -102,7 +102,12 @@ export interface PaginatedResponse<T> {
     total: number;
 }
 
-export type IssuePageLooks = 'List' | 'Board' | 'Calendar' | 'Activity';
+export type IssuePageLooks =
+    | 'List'
+    | 'Board'
+    | 'Calendar'
+    | 'Activity'
+    | 'Development';
 export interface ProductivityTrendProps {
     count: number;
     day: string;
