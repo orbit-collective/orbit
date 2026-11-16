@@ -7,6 +7,9 @@ use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Events\Live\ProjectChanged;
+use App\Support\Live\LiveUpdates;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
@@ -492,4 +495,20 @@ test('a merge GitHub refuses comes back as a message the browser can show', func
     $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/merge", ['repository_id' => DEV_REPO_ID, 'method' => 'merge'])
         ->assertStatus(422)
         ->assertJsonPath('errors.development.0', 'Required status check is failing');
+});
+
+test('a write from the view tells everyone looking at the project to read again, the refresh button does not', function () {
+    config(['live.enabled' => true]);
+    Event::fake([ProjectChanged::class]);
+    Http::fake(['*/v1/github/pull-request-update' => relayOk(relayPullRequest(['state' => 'closed']))]);
+
+    $this->actingAs($this->member)->postJson("$this->base/refresh")->assertNoContent();
+    app(LiveUpdates::class)->flush();
+    Event::assertNotDispatched(ProjectChanged::class);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/state", ['repository_id' => DEV_REPO_ID, 'state' => 'closed'])->assertOk();
+    app(LiveUpdates::class)->flush();
+
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => $event->projectId === $this->project->id
+        && collect($event->changes)->contains(fn ($change) => $change['type'] === 'development'));
 });

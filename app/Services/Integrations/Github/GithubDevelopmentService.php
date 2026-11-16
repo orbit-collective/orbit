@@ -61,6 +61,7 @@ class GithubDevelopmentService
         protected ActivityLogService $activityLogService,
         protected IssueRepository $issueRepository,
         protected GithubCommentFormatter $commentFormatter,
+        protected GithubDevelopmentAnnouncer $announcer,
     ) {}
 
     /**
@@ -317,8 +318,20 @@ class GithubDevelopmentService
             ->all();
     }
 
-    /** Drops what the view cached, e.g. after a branch was created. */
+    /**
+     * A write was made from the view (or a branch created): drops what it
+     * cached and tells everyone else looking at the project to read again.
+     */
     public function forget(Project $project): void
+    {
+        $this->announcer->announce($project->id);
+    }
+
+    /**
+     * Drops only what the view cached, without telling anyone: the refresh
+     * button's own reload follows, and nothing changed for the others.
+     */
+    public function dropCache(Project $project): void
     {
         CacheVersion::bump(CacheVersion::development($project->id));
     }

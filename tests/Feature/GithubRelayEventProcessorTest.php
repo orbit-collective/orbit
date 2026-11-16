@@ -8,6 +8,10 @@ use App\Models\ExternalIssueLink;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
+use App\Events\Live\ProjectChanged;
+use App\Support\Cache\CacheVersion;
+use App\Support\Live\LiveUpdates;
+use Illuminate\Support\Facades\Event;
 use App\Services\Integrations\Github\GithubRelayEventOutcome;
 use App\Services\Integrations\Github\GithubRelayEventProcessor;
 use App\Services\Integrations\Github\OrbitRelayApiException;
@@ -961,4 +965,44 @@ test('a review for an unlinked pull request is skipped without creating a link',
 
     expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
     expect(ExternalIssueLink::query()->count())->toBe(0);
+});
+
+test('every pull request, check and review event is announced to the development view, linked or not', function () {
+    config(['live.enabled' => true]);
+    Event::fake([ProjectChanged::class]);
+    $this->project->refresh();
+    $version = CacheVersion::current(CacheVersion::development($this->project->id));
+
+    // No marker: nothing is linked, and the view still hears of the pull request.
+    $this->processor->process(makeRelayEvent('No marker here.'), $this->projectIntegration);
+    $this->processor->process(makeCheckSuiteEvent(4580098240, 'passed'), $this->projectIntegration);
+    app(LiveUpdates::class)->flush();
+
+    expect(CacheVersion::current(CacheVersion::development($this->project->id)))->toBe($version + 2);
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => $event->projectId === $this->project->id
+        && collect($event->changes)->contains(fn ($change) => $change['type'] === 'development'));
+});
+
+test('an event that is not about pull requests is not announced', function () {
+    config(['live.enabled' => true]);
+    Event::fake([ProjectChanged::class]);
+    $event = makeRelayEvent('', action: 'edited');
+
+    $this->processor->process($event, $this->projectIntegration);
+    app(LiveUpdates::class)->flush();
+
+    // `edited` is a pull_request event the processor skips, but it is still a pull request event.
+    Event::assertDispatched(ProjectChanged::class);
+
+    Event::fake([ProjectChanged::class]);
+    $other = new GithubRelayEventDTO(
+        id: 'evt_x', type: 'push', action: 'opened', deliveryId: 'd', repositoryId: 1, pullRequestId: 1, pullRequestNumber: 1,
+        pullRequestUrl: null, pullRequestBody: null, pullRequestTitle: null, pullRequestSourceBranch: null, pullRequestTargetBranch: null,
+        pullRequestDraft: null, pullRequestState: null, pullRequestMerged: null, pullRequestMergedAt: null, pullRequestUpdatedAt: null,
+        checkStatus: null, reviewState: null, reviewerLogin: null, createdAt: now()->toIso8601String(),
+    );
+    $this->processor->process($other, $this->projectIntegration);
+    app(LiveUpdates::class)->flush();
+
+    Event::assertNotDispatched(ProjectChanged::class);
 });
