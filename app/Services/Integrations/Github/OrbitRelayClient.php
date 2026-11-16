@@ -287,6 +287,25 @@ class OrbitRelayClient
         );
     }
 
+    /**
+     * A comment as the Orbit app on a pull request, for what happens outside
+     * a webhook event (linking an issue to a pull request that already
+     * exists). Not deduplicated by orbit-api: call it once per action.
+     *
+     * @return array{id: int, url: string}
+     */
+    public function commentOnPullRequest(string $relayToken, int $repositoryId, int $number, string $body): array
+    {
+        return $this->request(
+            fn () => $this->authenticatedClient($relayToken)->post('/v1/github/pull-request-comment', [
+                'repositoryId' => $repositoryId,
+                'number' => $number,
+                'body' => $body,
+            ]),
+            'POST /v1/github/pull-request-comment',
+        );
+    }
+
     /** @return list<array<string, mixed>> */
     public function listCommits(string $relayToken, int $repositoryId, ?string $branch, int $page, int $perPage): array
     {

@@ -194,6 +194,7 @@ test('linking an issue adds its marker to the description and stores the link', 
     Http::fake([
         '*/v1/github/pull-requests*' => relayOk(relayPullRequest(['ci' => ['state' => 'passed']])),
         '*/v1/github/pull-request-update' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-comment' => relayOk(['id' => 9, 'url' => 'https://github.com/orbit-collective/orbit/pull/7#c9'], 201),
     ]);
 
     $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/issues", ['repository_id' => DEV_REPO_ID, 'issue_id' => $issue->id])
@@ -216,6 +217,7 @@ test('linking a second issue keeps the first one and linking twice changes nothi
     Http::fake([
         '*/v1/github/pull-requests*' => relayOk(relayPullRequest(['body' => "Adds login.\n\n<!-- orbit-issue:$first->id -->"])),
         '*/v1/github/pull-request-update' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-comment' => relayOk(['id' => 9, 'url' => 'https://github.com/orbit-collective/orbit/pull/7#c9'], 201),
     ]);
 
     $link = fn (Issue $issue) => $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/issues", ['repository_id' => DEV_REPO_ID, 'issue_id' => $issue->id])->assertCreated();
@@ -224,9 +226,10 @@ test('linking a second issue keeps the first one and linking twice changes nothi
     $link($second);
 
     expect(ExternalIssueLink::query()->count())->toBe(2);
-    // Linking the first issue only reads (its marker was already there); each
-    // link of the second reads and rewrites the description.
-    Http::assertSentCount(1 + 2 + 2);
+    // Linking the first issue reads and comments (its marker was already there);
+    // the second reads, rewrites the description and comments; linking it again
+    // reads and rewrites but says nothing new.
+    Http::assertSentCount(2 + 3 + 2);
 });
 
 test('an issue of another project cannot be linked', function () {
@@ -251,6 +254,7 @@ test('unlinking removes the marker and the link, and only that issue', function 
     Http::fake([
         '*/v1/github/pull-requests*' => relayOk(relayPullRequest(['body' => "Adds login.\n\n<!-- orbit-issue:$keep->id -->\n\n<!-- orbit-issue:$drop->id -->"])),
         '*/v1/github/pull-request-update' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-comment' => relayOk(['id' => 9, 'url' => 'https://github.com/orbit-collective/orbit/pull/7#c9'], 201),
     ]);
 
     $this->actingAs($this->member)->deleteJson("$this->base/pull-requests/7/issues/$drop->id$this->query")->assertOk()->assertJsonPath('linked', false);
@@ -372,4 +376,50 @@ test('the CI of several pull requests comes in one call', function () {
     $tooMany = collect(range(1, 21))->map(fn ($i) => "refs[]=r$i")->implode('&');
     $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&$tooMany")->assertJsonValidationErrors('refs');
     $this->actingAs(User::factory()->create())->getJson("$this->base/checks-batch$this->query&refs[]=abc")->assertForbidden();
+});
+
+test('linking an issue comments on the pull request like opening one with the marker does', function () {
+    $issue = Issue::factory()->create(['project_id' => $this->project->id, 'title' => 'Fix the login redirect']);
+    Http::fake([
+        '*/v1/github/pull-requests*' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-update' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-comment' => relayOk(['id' => 9, 'url' => 'https://github.com/orbit-collective/orbit/pull/7#c9'], 201),
+    ]);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/issues", ['repository_id' => DEV_REPO_ID, 'issue_id' => $issue->id])->assertCreated();
+
+    Http::assertSent(fn ($request) => str_ends_with($request->url(), '/pull-request-comment')
+        && $request['repositoryId'] === DEV_REPO_ID
+        && $request['number'] === 7
+        && str_contains($request['body'], 'Synced with Orbit')
+        && str_contains($request['body'], "#$issue->number — Fix the login redirect"));
+});
+
+test('a comment that could not be posted does not undo the link', function () {
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+    Http::fake([
+        '*/v1/github/pull-requests*' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-update' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-comment' => Http::response(['success' => false, 'error' => ['code' => 'GITHUB_COMMENT_REJECTED', 'message' => 'Resource not accessible']], 422),
+    ]);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/issues", ['repository_id' => DEV_REPO_ID, 'issue_id' => $issue->id])->assertCreated();
+
+    expect(ExternalIssueLink::query()->count())->toBe(1);
+});
+
+test('linking an issue that is already linked does not comment again', function () {
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id, 'project_integration_id' => $this->integration->id,
+        'external_id' => '4580098240', 'external_key' => 'orbit-collective/orbit#7', 'external_type' => 'github_pull_request',
+    ]);
+    Http::fake([
+        '*/v1/github/pull-requests*' => relayOk(relayPullRequest(['body' => "Adds login.\n\n<!-- orbit-issue:$issue->id -->"])),
+        '*/v1/github/pull-request-comment' => relayOk(['id' => 9, 'url' => 'u'], 201),
+    ]);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/issues", ['repository_id' => DEV_REPO_ID, 'issue_id' => $issue->id])->assertCreated();
+
+    Http::assertNotSent(fn ($request) => str_ends_with($request->url(), '/pull-request-comment'));
 });
