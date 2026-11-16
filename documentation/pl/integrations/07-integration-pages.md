@@ -57,19 +57,80 @@ wstecz) i `hideTitle` (strona ma własny nagłówek).
 `getSettingsTabByPath()` dopasowuje ścieżkę *pod* zakładką, więc sidebar
 utrzymuje aktywne Integrations.
 
-## Dodawanie czegoś do strony integracji
+## Przykład krok po kroku: dodaj wiersz "Webhook" do tabeli Details
 
-- **Nowy fakt w "Details"**: dodaj wiersz do `DetailsTable` w
-  `WorkspaceSettingsIntegrationDetail.tsx` (`icon`, przetłumaczony
-  `label`, `value`) i jego klucz pod `workspace_settings_integrations.detail`
-  w `lang/en` i `lang/pl`.
-- **Nowa sekcja konfiguracji**: wyrenderuj ją w sekcji "Configuration"
-  tego samego pliku, bramkowaną przez `integration.kind` (lub id) i
-  `showConfiguration`. Mutacje przechodzą przez `useIntegrationActions`,
-  więc dostają ten sam toast i obsługę `preserveScroll`.
-- **Nowa akcja**: dodaj ją do `useIntegrationActions` (zwróć ją),
-  wywołaj ze strony i — jeśli warto ją mieć pod klawiszem — dodaj
-  komendę.
+Tabela Details to miejsce na jeszcze jeden fakt o integracji. Ten
+przykład dodaje wiersz mówiący, czy integracja typu notify ma
+skonfigurowany webhook. Wykonuj kroki po kolei.
+
+## Krok 1 — Dodaj klucze tłumaczeń
+
+Dodaj etykietę i dwie wartości pod `workspace_settings_integrations.detail`
+w obu plikach, `lang/en/workspace_settings_integrations.php` i
+`lang/pl/workspace_settings_integrations.php` (`translations.test.ts`
+zawodzi, jeśli brakuje któregoś języka):
+
+```php
+// lang/en/workspace_settings_integrations.php
+'webhook' => 'Webhook',
+'webhook_set' => 'Configured',
+'webhook_unset' => 'Not configured',
+```
+
+```php
+// lang/pl/workspace_settings_integrations.php
+'webhook' => 'Webhook',
+'webhook_set' => 'Skonfigurowany',
+'webhook_unset' => 'Nieskonfigurowany',
+```
+
+## Krok 2 — Dodaj wiersz
+
+Plik: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetail.tsx`.
+Dodaj wiersz do `rows` w `DetailsTable`, tylko dla rodzaju, który ma
+webhook. Ikona musi być w `resources/js/utils/iconRegistry.ts` (`Link`
+jest):
+
+```tsx
+...(integration.kind === 'notify'
+    ? [
+          {
+              icon: 'Link' as const,
+              label: t('workspace_settings_integrations.detail.webhook'),
+              value: settings?.hasWebhookUrl
+                  ? t('workspace_settings_integrations.detail.webhook_set')
+                  : t('workspace_settings_integrations.detail.webhook_unset'),
+          },
+      ]
+    : []),
+```
+
+## Krok 3 — Pokryj to testem
+
+Plik: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetail.test.tsx`.
+Wyrenderuj integrację notify ze zapisanym webhookiem i bez niego i
+sprawdź termin oraz jego wartość, a także że integracja typu import nie
+dostaje tego wiersza:
+
+```tsx
+test('the Details table says whether the webhook is configured', () => {
+    renderDetail('discord', { settings: discordSettings(null) });
+
+    expect(screen.getByText('Webhook')).toBeInTheDocument();
+    expect(screen.getByText('Not configured')).toBeInTheDocument();
+});
+```
+
+Zaktualizuj listę terminów w pierwszym teście tego pliku
+(`['Vendor', 'Category', 'Type', 'Status', 'Website']`) dla rodzajów,
+które teraz pokazują nowy wiersz.
+
+Dla nowej sekcji konfiguracji albo nowej akcji zamiast wiersza obowiązuje
+ta sama kolejność: klucze w obu językach, markup w
+`WorkspaceSettingsIntegrationDetail.tsx` (konfiguracja idzie do sekcji
+"Configuration", bramkowana przez `integration.kind` i
+`showConfiguration`), każda mutacja jako metoda `useIntegrationActions` i
+test.
 
 ## Paleta poleceń
 

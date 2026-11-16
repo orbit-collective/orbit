@@ -56,19 +56,80 @@ GET /settings/integrations/{integration}      → SettingsController::integratio
 `hideTitle` (the page brings its own heading). `getSettingsTabByPath()`
 matches a path *under* a tab, so the sidebar keeps Integrations active.
 
-## Adding something to an integration's page
+## Worked example: add a "Webhook" row to the Details table
 
-- **A new fact in "Details"**: add a row to the `DetailsTable` in
-  `WorkspaceSettingsIntegrationDetail.tsx` (`icon`, a translated `label`,
-  a `value`) and its key under `workspace_settings_integrations.detail`
-  in `lang/en` and `lang/pl`.
-- **A new configuration section**: render it inside the
-  "Configuration" section of the same file, gated on
-  `integration.kind` (or the id) and `showConfiguration`. Mutations go
-  through `useIntegrationActions` so they get the same toast and
-  `preserveScroll` handling.
-- **A new action**: add it to `useIntegrationActions` (return it), call
-  it from the page, and — if it is worth a keystroke — add a command.
+The Details table is the place for one more fact about an integration.
+This example adds a row that says whether a notify integration has a
+webhook configured. Do the steps in order.
+
+## Step 1 — Add the translation keys
+
+Add the label and the two values under `workspace_settings_integrations.detail`
+in both `lang/en/workspace_settings_integrations.php` and
+`lang/pl/workspace_settings_integrations.php` (`translations.test.ts`
+fails if one language is missing):
+
+```php
+// lang/en/workspace_settings_integrations.php
+'webhook' => 'Webhook',
+'webhook_set' => 'Configured',
+'webhook_unset' => 'Not configured',
+```
+
+```php
+// lang/pl/workspace_settings_integrations.php
+'webhook' => 'Webhook',
+'webhook_set' => 'Skonfigurowany',
+'webhook_unset' => 'Nieskonfigurowany',
+```
+
+## Step 2 — Add the row
+
+File: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetail.tsx`.
+Add the row to the `rows` of the `DetailsTable`, only for the kind that
+has a webhook. The icon must be in `resources/js/utils/iconRegistry.ts`
+(`Link` is):
+
+```tsx
+...(integration.kind === 'notify'
+    ? [
+          {
+              icon: 'Link' as const,
+              label: t('workspace_settings_integrations.detail.webhook'),
+              value: settings?.hasWebhookUrl
+                  ? t('workspace_settings_integrations.detail.webhook_set')
+                  : t('workspace_settings_integrations.detail.webhook_unset'),
+          },
+      ]
+    : []),
+```
+
+## Step 3 — Cover it with a test
+
+File: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetail.test.tsx`.
+Render a notify integration with and without a stored webhook and assert
+the term and its value, and that an import integration does not get the
+row:
+
+```tsx
+test('the Details table says whether the webhook is configured', () => {
+    renderDetail('discord', { settings: discordSettings(null) });
+
+    expect(screen.getByText('Webhook')).toBeInTheDocument();
+    expect(screen.getByText('Not configured')).toBeInTheDocument();
+});
+```
+
+Update the list of terms in the first test of that file
+(`['Vendor', 'Category', 'Type', 'Status', 'Website']`) for the kinds that
+now show the new row.
+
+For a new section of configuration or a new action instead of a row, the
+same order applies: the keys in both languages, the markup in
+`WorkspaceSettingsIntegrationDetail.tsx` (configuration goes in its
+"Configuration" section, gated on `integration.kind` and
+`showConfiguration`), every mutation as a method of
+`useIntegrationActions`, and a test.
 
 ## Command palette
 

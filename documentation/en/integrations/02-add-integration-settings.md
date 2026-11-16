@@ -322,15 +322,35 @@ useEffect(() => {
 ```
 
 Add the matching `onSaveChannelName: (channelName: string) => void`
-prop, and in `WorkspaceSettingsIntegrationDetail.tsx` wire it to the same
-`useIntegrationActions().saveIntegrationSettings()` helper the webhook URL save button already
-uses, just with a different payload key:
+prop. The helper that saves settings accepts only the keys it knows, so
+first add the new key to its payload type in
+`resources/js/hooks/useIntegrationActions.ts`:
+
+```ts
+const saveIntegrationSettings = (
+    integrationId: IntegrationId,
+    data: {
+        webhook_url?: string;
+        channel_name?: string; // new
+        options?: Record<string, boolean>;
+    },
+) => {
+```
+
+Then, in `WorkspaceSettingsIntegrationDetail.tsx`, pass the callback to
+`WorkspaceSettingsIntegrationNotifyPanel` next to `onSaveWebhookUrl`,
+through the `actions` object the component already holds and the
+`integration` it was given:
 
 ```tsx
-onSaveChannelName={(channelName) => {
-    if (!openIntegration) return;
-    saveIntegrationSettings(openIntegration.id, { channel_name: channelName });
-}}
+<WorkspaceSettingsIntegrationNotifyPanel
+    // ...the props it already gets
+    onSaveChannelName={(channelName) =>
+        actions.saveIntegrationSettings(integration.id, {
+            channel_name: channelName,
+        })
+    }
+/>
 ```
 
 ### B7 — tests
