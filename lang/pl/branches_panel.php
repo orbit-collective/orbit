@@ -8,6 +8,4 @@ return [
     'retry' => 'Spróbuj ponownie',
     'loading' => 'Wczytywanie gałęzi',
     'empty' => 'To repozytorium nie ma gałęzi.',
-    'pager' => 'Strony gałęzi',
-    'pager' => 'Strony gałęzi',
 ];

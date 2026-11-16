@@ -3,6 +3,7 @@ import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ReactNode, useId } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatusPill from '@/Components/Atoms/StatusPill/StatusPill';
 import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import { DevelopmentPullRequest } from '@/types/Development';
@@ -15,6 +16,8 @@ interface PullRequestRowProps {
     projectId: number;
     pullRequest: DevelopmentPullRequest;
     expanded: boolean;
+    /** The checks have not arrived yet: a placeholder stands where their pill will be. */
+    ciPending?: boolean;
     onToggle: () => void;
     /** The detail; only mounted while the row is open, so it fetches nothing folded. */
     children: ReactNode;
@@ -38,6 +41,7 @@ export default function PullRequestRow({
     projectId,
     pullRequest,
     expanded,
+    ciPending = false,
     onToggle,
     children,
 }: PullRequestRowProps) {
@@ -132,6 +136,9 @@ export default function PullRequestRow({
                 <StatusPill tone={state.tone} icon={state.icon}>
                     {t(state.labelKey)}
                 </StatusPill>
+                {!ci && ciPending && (
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                )}
                 {ci && pullRequest.ci && (
                     <StatusPill
                         tone={ci.tone}

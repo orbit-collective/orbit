@@ -9,9 +9,6 @@ import { DevelopmentInsights } from '@/types/Development';
 import { languageShares, recentCommitCount } from '@/utils/development';
 import { intlLocale } from '@/utils/time';
 
-/** Weeks of commit activity drawn: a quarter reads at a glance, a year is a smear. */
-const ACTIVITY_WEEKS = 12;
-
 /**
  * The repository's own statistics: commit activity per week, who commits the
  * most and what it is written in. GitHub computes these lazily, so each part
@@ -19,15 +16,18 @@ const ACTIVITY_WEEKS = 12;
  */
 export default function RepositoryInsights({
     insights,
+    weeks: weeksShown = 12,
 }: {
     /** `null` until the first answer. */
     insights: DevelopmentInsights | null;
+    /** How many weeks of commit activity the chart draws (the latest ones). */
+    weeks?: number;
 }) {
     const { t, currentLocale } = useLaravelReactI18n();
     const locale = intlLocale(currentLocale());
 
     const weeks = useMemo(
-        () => insights?.commitActivity.slice(-ACTIVITY_WEEKS) ?? [],
+        () => insights?.commitActivity.slice(-weeksShown) ?? [],
         [insights],
     );
     const shares = useMemo(
@@ -75,8 +75,8 @@ export default function RepositoryInsights({
                     weeks.length > 0 ? (
                         <span>
                             {t('repository_insights.activity_summary', {
-                                count: recentCommitCount(weeks, ACTIVITY_WEEKS),
-                                weeks: ACTIVITY_WEEKS,
+                                count: recentCommitCount(weeks, weeksShown),
+                                weeks: weeksShown,
                             })}
                         </span>
                     ) : undefined

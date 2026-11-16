@@ -4,7 +4,7 @@ import { requestErrorMessage } from '@/hooks/useDevelopmentResource';
 import { DevelopmentPullRequest } from '@/types/Development';
 
 /** GitHub's largest page: the fewest requests for a long range. */
-export const PULL_REQUEST_PAGE = 100;
+const PULL_REQUEST_PAGE = 100;
 
 interface PullRequestWindow {
     /** Everything read so far; `null` until the first page is there. */

@@ -3,13 +3,10 @@ import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import BranchItem from '@/Components/Molecules/BranchItem/BranchItem';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
-import ListPager from '@/Components/Molecules/ListPager/ListPager';
+import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import { DevelopmentBranch } from '@/types/Development';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
-
-/** Branches per page: a short list that stays in view instead of a scroll. */
-export const BRANCHES_PAGE_SIZE = 6;
 
 interface BranchesPanelProps {
     /** The branches of the current page; `null` until that page's answer is there. */
@@ -18,6 +15,10 @@ interface BranchesPanelProps {
     total: number;
     page: number;
     onPageChange: (page: number) => void;
+    /** Rows per page, with the sizes on offer and what to do when another is picked. */
+    perPage: number;
+    perPageOptions: number[];
+    onPerPageChange: (perPage: number) => void;
     error: string | null;
     onRetry: () => void;
     /** Present when the user may create branches; the button opens the dialog. */
@@ -30,6 +31,9 @@ export default function BranchesPanel({
     total,
     page,
     onPageChange,
+    perPage,
+    perPageOptions,
+    onPerPageChange,
     error,
     onRetry,
     onCreate,
@@ -77,16 +81,13 @@ export default function BranchesPanel({
                     </p>
                 ) : !branches ? (
                     <div role="status" aria-label={t('branches_panel.loading')}>
-                        {Array.from(
-                            { length: BRANCHES_PAGE_SIZE },
-                            (_, index) => (
-                                <Skeleton
-                                    key={index}
-                                    index={index}
-                                    className="my-3 h-4 w-full"
-                                />
-                            ),
-                        )}
+                        {Array.from({ length: perPage }, (_, index) => (
+                            <Skeleton
+                                key={index}
+                                index={index}
+                                className="my-3 h-4 w-full"
+                            />
+                        ))}
                     </div>
                 ) : branches.length === 0 ? (
                     <p className="text-sm text-(--text-gray-color)">
@@ -102,12 +103,14 @@ export default function BranchesPanel({
             </div>
 
             {branches && (
-                <ListPager
-                    label={t('branches_panel.pager')}
-                    page={page}
-                    pageSize={BRANCHES_PAGE_SIZE}
+                <Pagination
+                    variant="compact"
                     total={total}
+                    page={page}
+                    perPage={perPage}
+                    perPageOptions={perPageOptions}
                     onPageChange={onPageChange}
+                    onPerPageChange={onPerPageChange}
                 />
             )}
         </section>

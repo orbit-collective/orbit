@@ -7,10 +7,13 @@ import {
     buildPullRequest,
     buildPullRequestDetail,
 } from '@/tests/development';
-import PullRequestsPanel, {
-    PULL_REQUESTS_PAGE_SIZE,
-    PULL_REQUESTS_PER_PAGE,
-} from './PullRequestsPanel';
+import PullRequestsPanel from './PullRequestsPanel';
+
+vi.mock('@/context/AlertContext', () => ({
+    useAlert: () => ({ addAlert: vi.fn() }),
+}));
+
+const PULL_REQUESTS_PER_PAGE = 8;
 
 vi.mock('axios');
 vi.stubGlobal(
@@ -49,6 +52,10 @@ const renderPanel = (
         repositoryUrl: 'https://github.com/orbit-collective/orbit',
         pullRequests,
         loading: false,
+        perPage: 8,
+        perPageOptions: [8, 16, 32],
+        onPerPageChange: vi.fn(),
+
         error: null,
         onRetry: vi.fn(),
         abilities: buildOverview().abilities,
@@ -228,28 +235,91 @@ describe('PullRequestsPanel', () => {
         );
     });
 
-    test('points to GitHub when the repository has more than one page', () => {
-        const many = Array.from(
-            { length: PULL_REQUESTS_PAGE_SIZE },
-            (_, index) =>
-                buildPullRequest({ number: index + 1, id: index + 1 }),
-        );
-        renderPanel({ pullRequests: many });
+    test('points to GitHub when the range holds more than the limit, and says how many are shown', () => {
+        renderPanel({ capped: true, limit: 250 });
 
         expect(
-            screen.getByRole('link', { name: /See the rest on GitHub/ }),
+            screen.getByText('Showing the newest 250 of this range.'),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('link', { name: /See all on GitHub/ }),
         ).toHaveAttribute(
             'href',
             'https://github.com/orbit-collective/orbit/pulls',
         );
     });
 
-    test('shows no such pointer for a short list', () => {
+    test('shows no such pointer while everything in the range is read', () => {
         renderPanel();
 
         expect(
-            screen.queryByRole('link', { name: /See the rest on GitHub/ }),
+            screen.queryByRole('link', { name: /See all on GitHub/ }),
         ).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/Showing the newest/),
+        ).not.toBeInTheDocument();
+    });
+
+    test('says older pull requests are still being read behind the ones shown', () => {
+        renderPanel({ loadingMore: true });
+
+        expect(screen.getByRole('status')).toHaveTextContent(
+            'Reading older pull requests…',
+        );
+        expect(screen.getByText('Open one')).toBeInTheDocument();
+    });
+
+    test('names the time range under the title', () => {
+        renderPanel({ rangeLabel: 'Updated in the last 90 days' });
+
+        expect(
+            screen.getByText('Updated in the last 90 days'),
+        ).toBeInTheDocument();
+    });
+
+    test('shows a placeholder where the checks of an open pull request are still arriving', () => {
+        renderPanel({
+            pullRequests: [
+                buildPullRequest({ number: 1, ci: null, headSha: 'abc' }),
+            ],
+            ciPending: new Set(['abc']),
+        });
+
+        expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
+        expect(screen.queryByText(/Checks/)).not.toBeInTheDocument();
+    });
+
+    test('tells the view which open pull requests are on screen, so only their checks are read', async () => {
+        const onVisibleShas = vi.fn();
+        renderPanel({ onVisibleShas });
+
+        expect(onVisibleShas).toHaveBeenLastCalledWith([
+            'abc1234def',
+            'abc1234def',
+        ]);
+
+        await userEvent.click(screen.getByRole('button', { name: /^Merged/ }));
+        expect(onVisibleShas).toHaveBeenLastCalledWith([]);
+    });
+
+    test('reports a new page size and starts again from the first page', async () => {
+        const onPerPageChange = vi.fn();
+        const many = Array.from({ length: 20 }, (_, index) =>
+            buildPullRequest({ number: index + 1, id: index + 1 }),
+        );
+        renderPanel({ pullRequests: many, onPerPageChange });
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Next page' }),
+        );
+        await userEvent.click(
+            screen.getByRole('button', { name: /Rows per page/ }),
+        );
+        await userEvent.click(
+            await screen.findByRole('menuitemradio', { name: /16/ }),
+        );
+
+        expect(onPerPageChange).toHaveBeenCalledWith(16);
     });
 
     test('pages through a long list instead of listing everything', async () => {
@@ -267,11 +337,9 @@ describe('PullRequestsPanel', () => {
         expect(screen.getAllByRole('article')).toHaveLength(
             PULL_REQUESTS_PER_PAGE,
         );
-        expect(
-            screen.getByText(
-                `1–${PULL_REQUESTS_PER_PAGE} of ${PULL_REQUESTS_PER_PAGE + 3}`,
-            ),
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Showing/)).toHaveTextContent(
+            `Showing 1 to ${PULL_REQUESTS_PER_PAGE} of ${PULL_REQUESTS_PER_PAGE + 3} results`,
+        );
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Next page' }),

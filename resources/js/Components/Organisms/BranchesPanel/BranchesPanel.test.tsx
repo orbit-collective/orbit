@@ -2,7 +2,13 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { buildBranch } from '@/tests/development';
-import BranchesPanel, { BRANCHES_PAGE_SIZE } from './BranchesPanel';
+import BranchesPanel from './BranchesPanel';
+
+vi.mock('@/context/AlertContext', () => ({
+    useAlert: () => ({ addAlert: vi.fn() }),
+}));
+
+const PAGE = 6;
 
 const pageOf = (count: number) =>
     Array.from({ length: count }, (_, index) =>
@@ -16,7 +22,10 @@ const pageOf = (count: number) =>
 const base = {
     total: 0,
     page: 1,
+    perPage: PAGE,
+    perPageOptions: [6, 12, 24],
     onPageChange: vi.fn(),
+    onPerPageChange: vi.fn(),
     error: null,
     onRetry: vi.fn(),
 };
@@ -28,9 +37,7 @@ describe('BranchesPanel', () => {
         expect(
             screen.getByRole('status', { name: 'Loading branches' }),
         ).toBeInTheDocument();
-        expect(screen.getAllByTestId('skeleton')).toHaveLength(
-            BRANCHES_PAGE_SIZE,
-        );
+        expect(screen.getAllByTestId('skeleton')).toHaveLength(PAGE);
     });
 
     test('shows the error with a way to retry', async () => {
@@ -65,17 +72,17 @@ describe('BranchesPanel', () => {
         render(
             <BranchesPanel
                 {...base}
-                branches={pageOf(BRANCHES_PAGE_SIZE)}
+                branches={pageOf(PAGE)}
                 total={134}
                 page={2}
                 onPageChange={onPageChange}
             />,
         );
 
-        expect(screen.getAllByRole('listitem')).toHaveLength(
-            BRANCHES_PAGE_SIZE,
+        expect(screen.getAllByRole('listitem')).toHaveLength(PAGE);
+        expect(screen.getByText(/Showing/)).toHaveTextContent(
+            'Showing 7 to 12 of 134 results',
         );
-        expect(screen.getByText('7–12 of 134')).toBeInTheDocument();
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Next page' }),
@@ -96,5 +103,26 @@ describe('BranchesPanel', () => {
         );
 
         expect(onCreate).toHaveBeenCalled();
+    });
+
+    test('reports a new page size', async () => {
+        const onPerPageChange = vi.fn();
+        render(
+            <BranchesPanel
+                {...base}
+                branches={pageOf(PAGE)}
+                total={134}
+                onPerPageChange={onPerPageChange}
+            />,
+        );
+
+        await userEvent.click(
+            screen.getByRole('button', { name: /Rows per page/ }),
+        );
+        await userEvent.click(
+            await screen.findByRole('menuitemradio', { name: /12/ }),
+        );
+
+        expect(onPerPageChange).toHaveBeenCalledWith(12);
     });
 });

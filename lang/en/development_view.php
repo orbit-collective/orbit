@@ -8,6 +8,7 @@ return [
     'private' => 'Private',
     'public' => 'Public',
     'open_on_github' => 'Open on GitHub',
+    'customize' => 'Customize the view',
     'refresh' => 'Refresh',
     'new_branch' => 'New branch',
     'pull_requests_failed' => 'Could not load pull requests from GitHub.',

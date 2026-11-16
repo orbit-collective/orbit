@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ComponentProps, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 import { buildBranch } from '@/tests/development';
-import BranchesPanel, { BRANCHES_PAGE_SIZE } from './BranchesPanel';
+import BranchesPanel from './BranchesPanel';
 
 const names = [
     'develop',
@@ -16,7 +16,7 @@ const names = [
 const firstPage = [
     buildBranch(),
     ...names
-        .slice(0, BRANCHES_PAGE_SIZE - 1)
+        .slice(0, 6 - 1)
         .map((name) =>
             buildBranch({ name, isDefault: false, protected: false }),
         ),
@@ -43,6 +43,9 @@ const meta = {
         branches: firstPage,
         total: 23,
         page: 1,
+        perPage: 6,
+        perPageOptions: [6, 12, 24],
+        onPerPageChange: () => {},
         onPageChange: () => {},
         error: null,
         onRetry: () => {},
@@ -56,7 +59,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     play: async ({ canvasElement }) => {
         await expect(
-            within(canvasElement).getByText('1–6 of 23'),
+            within(canvasElement).getByText(/Showing/),
         ).toBeInTheDocument();
     },
 };
@@ -68,7 +71,9 @@ export const Paging: Story = {
         await userEvent.click(
             canvas.getByRole('button', { name: 'Next page' }),
         );
-        await expect(canvas.getByText('7–12 of 23')).toBeInTheDocument();
+        await expect(canvas.getByText(/Showing/)).toHaveTextContent(
+            'Showing 7 to 12 of 23 results',
+        );
     },
 };
 
