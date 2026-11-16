@@ -412,3 +412,114 @@ describe('Pagination Component', () => {
         expect(root).toHaveClass('py-4');
     });
 });
+
+describe('Pagination, controlled and compact', () => {
+    const renderControlled = (
+        props: Partial<React.ComponentProps<typeof Pagination>> = {},
+    ) => {
+        const onPageChange = vi.fn();
+        const onPerPageChange = vi.fn();
+        const view = render(
+            <Pagination
+                total={134}
+                page={2}
+                perPage={6}
+                perPageOptions={[6, 12, 24]}
+                onPageChange={onPageChange}
+                onPerPageChange={onPerPageChange}
+                variant="compact"
+                {...props}
+            />,
+        );
+
+        return { onPageChange, onPerPageChange, ...view };
+    };
+
+    test('works out what is shown from the page, size and total', () => {
+        renderControlled();
+
+        const summary = screen.getByText(/Showing/);
+        expect(summary).toHaveTextContent('Showing 7 to 12 of 134 results');
+        expect(screen.getByRole('button', { name: 'Page 2' })).toHaveAttribute(
+            'aria-current',
+            'page',
+        );
+    });
+
+    test('changes the page with buttons, never a link', async () => {
+        const { onPageChange } = renderControlled();
+
+        expect(screen.queryByRole('link')).not.toBeInTheDocument();
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Next page' }),
+        );
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Previous page' }),
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Page 1' }));
+
+        expect(onPageChange).toHaveBeenNthCalledWith(1, 3);
+        expect(onPageChange).toHaveBeenNthCalledWith(2, 1);
+        expect(onPageChange).toHaveBeenNthCalledWith(3, 1);
+    });
+
+    test('stops at the ends and clips the last range', () => {
+        const { unmount } = renderControlled({ page: 1 });
+        expect(
+            screen.getByRole('button', { name: 'Previous page' }),
+        ).toBeDisabled();
+        unmount();
+
+        renderControlled({ page: 23, total: 134 });
+        expect(
+            screen.getByRole('button', { name: 'Next page' }),
+        ).toBeDisabled();
+        expect(screen.getByText(/Showing/)).toHaveTextContent(
+            'Showing 133 to 134 of 134 results',
+        );
+    });
+
+    test('clamps a page that is past the end after the list shrank', () => {
+        renderControlled({ page: 99, total: 20 });
+
+        expect(screen.getByText(/Showing/)).toHaveTextContent(
+            'Showing 19 to 20 of 20 results',
+        );
+    });
+
+    test('offers the given sizes and reports a new one without touching the URL', async () => {
+        const { onPerPageChange } = renderControlled();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: /Rows per page/ }),
+        );
+        await userEvent.click(
+            await screen.findByRole('menuitemradio', { name: /12/ }),
+        );
+
+        expect(onPerPageChange).toHaveBeenCalledWith(12);
+        expect(router.get).not.toHaveBeenCalled();
+        expect(addAlert).not.toHaveBeenCalled();
+    });
+
+    test('shows no page buttons for a single page, and nothing for an empty list', () => {
+        const { unmount } = renderControlled({ total: 5 });
+        expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+        expect(screen.getByText(/Showing/)).toHaveTextContent(
+            'Showing 1 to 5 of 5 results',
+        );
+        unmount();
+
+        const { container } = renderControlled({ total: 0 });
+        expect(container).toBeEmptyDOMElement();
+    });
+
+    test('the compact look changes the size of the controls, not their behaviour', () => {
+        renderControlled();
+
+        expect(screen.getByRole('button', { name: 'Next page' })).toHaveClass(
+            'h-7',
+            'rounded-full',
+        );
+    });
+});

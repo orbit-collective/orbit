@@ -424,10 +424,28 @@ export interface NavItemProps {
     tourId?: string;
 }
 export interface PaginationProps {
-    links: Array<{ url: string | null; label: string; active: boolean }>;
-    from: number;
-    to: number;
+    /** The paginator's links from the server. Left out in the controlled mode below. */
+    links?: Array<{ url: string | null; label: string; active: boolean }>;
+    from?: number;
+    to?: number;
     total: number;
+    /**
+     * `compact` is the quieter look for a panel's own list: smaller controls
+     * and no side padding. It changes nothing about how the pager works.
+     */
+    variant?: 'default' | 'compact';
+    /**
+     * Controlled mode, for a list the page pages in memory or over its own
+     * requests rather than through the URL: give the current `page`, the
+     * `perPage` size and what to do on a change. `links`, `from` and `to` are
+     * then worked out from `total`.
+     */
+    page?: number;
+    perPage?: number;
+    onPageChange?: (page: number) => void;
+    onPerPageChange?: (perPage: number) => void;
+    /** The sizes the rows-per-page menu offers (default 10, 20, 50, 100). */
+    perPageOptions?: number[];
     queryParams?: { perPage?: string; page?: string; [key: string]: any };
     /** Query-string name of the page number. Override when the page also holds another pager. */
     pageParam?: string;

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 import Pagination from './Pagination';
 
 type PageLink = { url: string | null; label: string; active: boolean };
@@ -92,4 +93,40 @@ export const SinglePage: Story = {
 /** With no results the component renders nothing. */
 export const Empty: Story = {
     args: { links: makeLinks(1, 1), from: 0, to: 0, total: 0 },
+};
+
+function ControlledDemo() {
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(6);
+
+    return (
+        <div className="w-[560px] rounded-2xl border border-(--border-color) bg-(--surface-color) p-4">
+            <Pagination
+                variant="compact"
+                total={134}
+                page={page}
+                perPage={perPage}
+                perPageOptions={[6, 12, 24]}
+                onPageChange={setPage}
+                onPerPageChange={(size) => {
+                    setPerPage(size);
+                    setPage(1);
+                }}
+            />
+        </div>
+    );
+}
+
+/** Compact and controlled: for a panel's own list, paged in memory or over its own requests. */
+export const CompactControlled: StoryObj = {
+    render: () => <ControlledDemo />,
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+        await userEvent.click(
+            canvas.getByRole('button', { name: 'Next page' }),
+        );
+        await expect(canvas.getByText(/Showing/)).toHaveTextContent(
+            'Showing 7 to 12 of 134 results',
+        );
+    },
 };
