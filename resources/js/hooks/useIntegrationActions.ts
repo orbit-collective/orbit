@@ -93,7 +93,25 @@ export function useIntegrationActions({
         }
     };
 
-    useEffect(() => stopImportPolling, []);
+    // `removeAlert` may change identity between renders; the cleanup below
+    // must run only on unmount, so it reads the latest one through a ref.
+    const removeAlertRef = useRef(removeAlert);
+    removeAlertRef.current = removeAlert;
+
+    // The progress toast belongs to this hook, but the alert provider outlives
+    // the page: leaving it behind would freeze it on its last message with
+    // nothing left to finish it.
+    useEffect(
+        () => () => {
+            stopImportPolling();
+
+            if (importAlertIdRef.current) {
+                removeAlertRef.current(importAlertIdRef.current);
+                importAlertIdRef.current = null;
+            }
+        },
+        [],
+    );
 
     useEffect(() => {
         const alertId = importAlertIdRef.current;

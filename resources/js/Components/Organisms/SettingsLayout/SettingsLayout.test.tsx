@@ -57,6 +57,22 @@ describe('SettingsLayout', () => {
         expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
     });
 
+    test('the tab crumb can keep the project of the page below it', () => {
+        render(
+            <SettingsLayout
+                tabId="integrations"
+                tabHref="/settings/integrations?project=2"
+                breadcrumbTrail={[{ label: 'GitHub' }]}
+            >
+                <p>Tab body</p>
+            </SettingsLayout>,
+        );
+
+        expect(
+            screen.getByRole('link', { name: 'Integrations' }),
+        ).toHaveAttribute('href', '/settings/integrations?project=2');
+    });
+
     test('passes the projects through to the sidebar', () => {
         render(
             <SettingsLayout

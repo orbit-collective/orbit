@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import { IntegrationId, INTEGRATIONS } from '@/types/Integrations';
+import { GithubConnectStatus } from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsIntegrationDetail from './WorkspaceSettingsIntegrationDetail';
 
@@ -746,6 +747,143 @@ describe('WorkspaceSettingsIntegrationDetail', () => {
                     'Import failed — check your notifications for details.',
                 ),
             ).toBeInTheDocument();
+        });
+    });
+
+    describe('switching the project', () => {
+        const both = { memberProjects: [projectA, projectB] };
+
+        test('an unsaved webhook url does not carry over to the other project', async () => {
+            const { rerender } = renderDetail('discord', {
+                ...both,
+                selectedProjectId: projectA.id,
+                settings: discordSettings(null),
+            });
+
+            await userEvent.type(
+                screen.getByLabelText('Webhook URL'),
+                'https://discord.com/api/webhooks/1/abc',
+            );
+
+            rerender(
+                detailUi('discord', {
+                    ...both,
+                    selectedProjectId: projectB.id,
+                    settings: discordSettings(null),
+                }),
+            );
+
+            expect(screen.getByLabelText('Webhook URL')).toHaveValue('');
+            expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+        });
+
+        test('an open repository picker does not carry over to the other project', async () => {
+            const orbitWeb = {
+                id: 3,
+                owner: 'orbit-collective',
+                name: 'orbit-web',
+            };
+            const fetchSpy = vi
+                .spyOn(globalThis, 'fetch')
+                .mockImplementation(
+                    async () =>
+                        new Response(
+                            JSON.stringify({ repositories: [orbitWeb] }),
+                        ),
+                );
+            const status: GithubConnectStatus = {
+                status: 'connected',
+                installUrl: null,
+                repository: { owner: 'orbit-collective', name: 'orbit' },
+                repositories: [
+                    { id: 1, owner: 'orbit-collective', name: 'orbit' },
+                ],
+                connectedAt: '2026-10-01T00:00:00Z',
+                health: 'healthy',
+                lastSuccessfulSyncAt: null,
+                lastSyncAttemptAt: null,
+                lastFailedSyncAt: null,
+                errorMessage: null,
+                pendingEventCount: 0,
+                pendingEventCountCapped: false,
+            };
+            const { rerender } = renderDetail('github', {
+                ...both,
+                selectedProjectId: projectA.id,
+                enabled: true,
+                githubConnectStatus: status,
+            });
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Add repository' }),
+            );
+            expect(
+                await screen.findByText('orbit-collective/orbit-web'),
+            ).toBeInTheDocument();
+
+            rerender(
+                detailUi('github', {
+                    ...both,
+                    selectedProjectId: projectB.id,
+                    enabled: true,
+                    githubConnectStatus: status,
+                }),
+            );
+
+            expect(
+                screen.queryByText('orbit-collective/orbit-web'),
+            ).not.toBeInTheDocument();
+
+            fetchSpy.mockRestore();
+        });
+
+        test('leaving the page takes the import progress toast with it', async () => {
+            const jira = INTEGRATIONS.find(({ id }) => id === 'jira')!;
+            const page = (shown: boolean) => (
+                <AlertProvider>
+                    {shown && (
+                        <WorkspaceSettingsIntegrationDetail
+                            integration={jira}
+                            memberProjects={[projectA]}
+                            selectedProjectId={projectA.id}
+                            hasIntegrationsAccess
+                            canUpdateIntegrations
+                            enabled
+                            jiraImportProgress={null}
+                            jiraSettings={{
+                                hasCredentials: true,
+                                instanceUrl: 'https://example.atlassian.net',
+                                mappingMetadata: {
+                                    statuses: [],
+                                    priorities: [],
+                                    issueTypes: [],
+                                },
+                                fieldMappings: [],
+                                lastImport: null,
+                            }}
+                        />
+                    )}
+                </AlertProvider>
+            );
+            // The alert provider outlives the page, like the app's own.
+            const { rerender } = render(page(true));
+
+            await userEvent.type(
+                screen.getByPlaceholderText('Jira project key'),
+                'PR',
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Import' }),
+            );
+            expect(screen.getByText(/Importing…/)).toBeInTheDocument();
+
+            rerender(page(false));
+
+            await waitFor(() =>
+                expect(
+                    screen.queryByText(/Importing…/),
+                ).not.toBeInTheDocument(),
+            );
         });
     });
 });
