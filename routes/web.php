@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\DashboardSavedLayoutController;
 use App\Http\Controllers\DeveloperPortalController;
+use App\Http\Controllers\GithubDevelopmentController;
 use App\Http\Controllers\GithubIntegrationController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\IssueGithubDevelopmentController;
@@ -50,6 +51,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{project}/issues/{issue}/preview', [IssueController::class, 'preview'])->name('projects.issues.preview');
     Route::get('/projects/{project}/issues/{issue}', [IssueController::class, 'show'])->name('issues.show');
     Route::delete('/issues/bulk-destroy', [IssueController::class, 'bulkDestroy'])->name('issues.bulk-destroy');
+    Route::prefix('/projects/{project}/development')->middleware('throttle:120,1')->name('projects.development.')->group(function () {
+        Route::get('/pull-requests', [GithubDevelopmentController::class, 'pullRequests'])->name('pull-requests.index');
+        Route::get('/pull-requests/{number}', [GithubDevelopmentController::class, 'pullRequest'])->whereNumber('number')->name('pull-requests.show');
+        Route::post('/pull-requests/{number}/state', [GithubDevelopmentController::class, 'setPullRequestState'])->whereNumber('number')->name('pull-requests.state');
+        Route::post('/pull-requests/{number}/issues', [GithubDevelopmentController::class, 'linkIssue'])->whereNumber('number')->name('pull-requests.issues.store');
+        Route::delete('/pull-requests/{number}/issues/{issue}', [GithubDevelopmentController::class, 'unlinkIssue'])->whereNumber(['number', 'issue'])->name('pull-requests.issues.destroy');
+        Route::get('/commits', [GithubDevelopmentController::class, 'commits'])->name('commits.index');
+        Route::get('/branches', [GithubDevelopmentController::class, 'branches'])->name('branches.index');
+        Route::post('/branches', [GithubDevelopmentController::class, 'createBranch'])->name('branches.store');
+        Route::get('/checks', [GithubDevelopmentController::class, 'checks'])->name('checks.show');
+        Route::get('/insights', [GithubDevelopmentController::class, 'insights'])->name('insights.show');
+    });
     Route::post('/issues/{issue}/github/branches', [IssueGithubDevelopmentController::class, 'createBranch'])->name('issues.github.branches.store');
     Route::post('/issues/{issue}/github/pull-requests', [IssueGithubDevelopmentController::class, 'createPullRequest'])->name('issues.github.pull-requests.store');
     Route::post('/issues/{issue}/comments', [CommentController::class, 'store'])->name('comments.store');

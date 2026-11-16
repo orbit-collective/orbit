@@ -42,7 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Attachment uploads, the command palette search and the WebSocket
+        // Attachment uploads, the command palette search, the Development view's data and the WebSocket
         // channel authorisation are the web routes answered with JSON rather
         // than an Inertia redirect (the Tiptap paste/drop handler needs the
         // stored URL back, the palette is a global overlay, Echo wants a status
@@ -53,6 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*')
                 || $request->is('projects/*/attachments')
                 || $request->is('command-palette/*')
+                || $request->is('projects/*/development/*')
                 || $request->is('settings/dev-portal/containers/*')
                 || $request->is('broadcasting/auth'),
         );

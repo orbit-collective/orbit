@@ -89,6 +89,12 @@ class ProjectPolicy
         return $project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_MANAGE);
     }
 
+    /** Creating a branch from the Development view - the same permission as creating one from an issue. */
+    public function createGithubDevelopment(User $user, Project $project): bool
+    {
+        return $project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_CREATE);
+    }
+
     public function viewAutomation(User $user, Project $project): bool
     {
         return $project->hasPermission($user, Permission::AUTOMATION_VIEW);

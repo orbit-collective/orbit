@@ -45,6 +45,17 @@ class GithubBranchService
      */
     public function create(Project $project, Issue $issue, int $repositoryId, string $name, ?string $baseBranch = null): GithubCreatedBranchDTO
     {
+        return $this->createBranch($project, $repositoryId, $name, $baseBranch);
+    }
+
+    /**
+     * The same creation without an issue, for the project's Development
+     * view where a branch does not have to start from one.
+     *
+     * @throws ValidationException if nothing is connected or orbit-api rejects the request
+     */
+    public function createBranch(Project $project, int $repositoryId, string $name, ?string $baseBranch = null): GithubCreatedBranchDTO
+    {
         $projectIntegration = $this->projectIntegrationRepository->findForProject($project, 'github');
         $relayToken = $projectIntegration?->resolveGithubRelayToken();
 
