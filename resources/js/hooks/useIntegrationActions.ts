@@ -204,7 +204,11 @@ export function useIntegrationActions({
 
             // 'flash' included for the same reason as the Jira import poll
             // above - see that call's comment.
-            router.reload({ only: ['githubConnectStatus', 'flash'] });
+            // The controller derives integrationEnabled from the same status
+            // read, so the two props are reloaded together.
+            router.reload({
+                only: ['githubConnectStatus', 'integrationEnabled', 'flash'],
+            });
         }, GITHUB_POLL_INTERVAL_MS);
     };
 
