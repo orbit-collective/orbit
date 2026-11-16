@@ -316,6 +316,45 @@ describe('WorkspaceSettingsIntegrationDetail', () => {
         expectPanelsToFold([/^Project/]);
     });
 
+    describe('GitHub connection polling', () => {
+        test('a pending connection polls the status and the enabled flag together', () => {
+            vi.useFakeTimers();
+            mockRouterReload.mockClear();
+
+            renderDetail('github', {
+                enabled: false,
+                githubConnectStatus: {
+                    status: 'pending',
+                    installUrl:
+                        'https://github.com/apps/orbit/installations/new',
+                    repository: null,
+                    repositories: [],
+                    connectedAt: null,
+                    health: null,
+                    lastSuccessfulSyncAt: null,
+                    lastSyncAttemptAt: null,
+                    lastFailedSyncAt: null,
+                    errorMessage: null,
+                    pendingEventCount: null,
+                    pendingEventCountCapped: false,
+                },
+            });
+
+            act(() => {
+                vi.advanceTimersByTime(2100);
+            });
+
+            // integrationEnabled is derived from the same status read as
+            // githubConnectStatus, so reloading one without the other would
+            // leave the hero saying "not connected" after it connected.
+            expect(mockRouterReload).toHaveBeenCalledWith({
+                only: ['githubConnectStatus', 'integrationEnabled', 'flash'],
+            });
+
+            vi.useRealTimers();
+        });
+    });
+
     describe('GitHub connect flow', () => {
         test('opens a blank tab synchronously, then navigates it to the install url once the request succeeds', async () => {
             const fakeTab = {
