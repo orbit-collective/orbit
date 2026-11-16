@@ -19,6 +19,8 @@ return [
     'link_issue' => 'Powiąż zgłoszenie',
     'unlink' => 'Odepnij zgłoszenie #:number',
     'open_on_github' => 'Otwórz na GitHubie',
+    'merge' => 'Scal',
+    'merge_conflicts' => 'Ten pull request ma konflikty, które trzeba rozwiązać przed scaleniem.',
     'close' => 'Zamknij pull request',
     'confirm_close' => 'Kliknij ponownie, aby zamknąć',
     'reopen' => 'Otwórz pull request ponownie',

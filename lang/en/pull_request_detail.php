@@ -19,6 +19,8 @@ return [
     'link_issue' => 'Link an issue',
     'unlink' => 'Unlink issue #:number',
     'open_on_github' => 'Open on GitHub',
+    'merge' => 'Merge',
+    'merge_conflicts' => 'This pull request has conflicts that must be resolved before it can be merged.',
     'close' => 'Close pull request',
     'confirm_close' => 'Click again to close',
     'reopen' => 'Reopen pull request',

@@ -15,6 +15,13 @@ return [
         'pending' => 'Testy trwają',
         'none' => 'Brak testów',
     ],
+    'mergeable' => [
+        'clean' => 'Gotowy do scalenia',
+        'unstable' => 'Testy nie przechodzą',
+        'behind' => 'Za gałęzią bazową',
+        'blocked' => 'Zablokowany regułami gałęzi',
+        'dirty' => 'Ma konflikty',
+    ],
     'review' => [
         'approved' => 'Zaakceptowany',
         'changes_requested' => 'Wymaga zmian',

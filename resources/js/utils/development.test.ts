@@ -7,6 +7,7 @@ import {
     formatDuration,
     isOpen,
     languageShares,
+    mergeableLook,
     pullRequestLook,
     recentCommitCount,
     repositoryLabel,
@@ -176,5 +177,35 @@ describe('branchNameFor', () => {
             60,
         );
         expect(branchNameFor(1, '!!!')).toBe('1');
+    });
+});
+
+describe('mergeableLook', () => {
+    test('only conflicts rule merging out', () => {
+        expect(mergeableLook('clean')).toMatchObject({
+            tone: 'success',
+            blocksMerge: false,
+        });
+        expect(mergeableLook('unstable')).toMatchObject({
+            tone: 'warning',
+            blocksMerge: false,
+        });
+        expect(mergeableLook('behind')).toMatchObject({
+            tone: 'warning',
+            blocksMerge: false,
+        });
+        expect(mergeableLook('blocked')).toMatchObject({
+            tone: 'warning',
+            blocksMerge: false,
+        });
+        expect(mergeableLook('dirty')).toMatchObject({
+            tone: 'danger',
+            blocksMerge: true,
+        });
+    });
+
+    test('an unknown or missing state has no pill', () => {
+        expect(mergeableLook(null)).toBeNull();
+        expect(mergeableLook('unknown')).toBeNull();
     });
 });

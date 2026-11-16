@@ -433,6 +433,7 @@ function DevelopmentBoard({
                         version={version}
                         busy={actions.busy}
                         onSetState={actions.setPullRequestState}
+                        onMerge={actions.mergePullRequest}
                         onLinkIssue={actions.linkIssue}
                         onUnlinkIssue={actions.unlinkIssue}
                     />

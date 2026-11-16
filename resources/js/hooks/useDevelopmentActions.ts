@@ -62,6 +62,33 @@ export function useDevelopmentActions(
         [projectId, repositoryId, run, t],
     );
 
+    const mergePullRequest = useCallback(
+        (
+            number: number,
+            options: { method: string; commitTitle?: string },
+            headSha: string,
+        ) =>
+            run(
+                () =>
+                    axios.post(
+                        route('projects.development.pull-requests.merge', {
+                            project: projectId,
+                            number,
+                        }),
+                        {
+                            repository_id: repositoryId,
+                            method: options.method,
+                            head_sha: headSha,
+                            ...(options.commitTitle
+                                ? { commit_title: options.commitTitle }
+                                : {}),
+                        },
+                    ),
+                t('development_actions.merged', { number }),
+            ),
+        [projectId, repositoryId, run, t],
+    );
+
     const linkIssue = useCallback(
         (number: number, issueId: number) =>
             run(
@@ -119,6 +146,7 @@ export function useDevelopmentActions(
     return {
         busy,
         setPullRequestState,
+        mergePullRequest,
         linkIssue,
         unlinkIssue,
         createBranch,

@@ -110,6 +110,55 @@ export function reviewLook(state: ReviewState): PillLook | null {
     }
 }
 
+/**
+ * How GitHub says a pull request stands against its base (`mergeable_state`).
+ * Unknown or still being computed has no pill, and only conflicts (`dirty`)
+ * rule merging out: every other state is GitHub's to refuse with a reason.
+ */
+export function mergeableLook(
+    state: string | null,
+): (PillLook & { blocksMerge: boolean }) | null {
+    switch (state) {
+        case 'clean':
+            return {
+                tone: 'success',
+                icon: 'CircleCheck',
+                labelKey: 'development_status.mergeable.clean',
+                blocksMerge: false,
+            };
+        case 'unstable':
+            return {
+                tone: 'warning',
+                icon: 'TriangleExclamationPoint',
+                labelKey: 'development_status.mergeable.unstable',
+                blocksMerge: false,
+            };
+        case 'behind':
+            return {
+                tone: 'warning',
+                icon: 'ArrowDown',
+                labelKey: 'development_status.mergeable.behind',
+                blocksMerge: false,
+            };
+        case 'blocked':
+            return {
+                tone: 'warning',
+                icon: 'ShieldCheck',
+                labelKey: 'development_status.mergeable.blocked',
+                blocksMerge: false,
+            };
+        case 'dirty':
+            return {
+                tone: 'danger',
+                icon: 'CircleX',
+                labelKey: 'development_status.mergeable.dirty',
+                blocksMerge: true,
+            };
+        default:
+            return null;
+    }
+}
+
 /** A run's length as `1m 05s` / `42s`, or null when GitHub did not say. */
 export function formatDuration(seconds: number | null): string | null {
     if (seconds === null) return null;

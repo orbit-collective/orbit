@@ -21,6 +21,7 @@ vi.stubGlobal(
 
 const handlers = () => ({
     onSetState: vi.fn(),
+    onMerge: vi.fn().mockResolvedValue(true),
     onLinkIssue: vi.fn(),
     onUnlinkIssue: vi.fn(),
 });
@@ -272,5 +273,107 @@ describe('PullRequestDetail', () => {
                 }),
             ).getByRole('button', { name: 'Link an issue' }),
         ).toBeDisabled();
+    });
+
+    test('a manager can merge an open pull request: the form opens, with the method and commit title', async () => {
+        const callbacks = handlers();
+        renderDetail({}, callbacks);
+        await screen.findByText('+120');
+
+        const merge = screen.getByRole('button', { name: 'Merge' });
+        expect(merge).toHaveAttribute('aria-expanded', 'false');
+        await userEvent.click(merge);
+
+        expect(
+            screen.getByRole('form', { name: 'Merge pull request #7' }),
+        ).toBeInTheDocument();
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Confirm merge commit' }),
+        );
+
+        expect(callbacks.onMerge).toHaveBeenCalledWith({
+            method: 'merge',
+            commitTitle: 'Merge pull request #7',
+        });
+        await waitFor(() =>
+            expect(screen.queryByRole('form')).not.toBeInTheDocument(),
+        );
+    });
+
+    test('the form stays open when the merge did not work', async () => {
+        const callbacks = {
+            ...handlers(),
+            onMerge: vi.fn().mockResolvedValue(false),
+        };
+        renderDetail({}, callbacks);
+        await screen.findByText('+120');
+
+        await userEvent.click(screen.getByRole('button', { name: 'Merge' }));
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Confirm merge commit' }),
+        );
+
+        expect(callbacks.onMerge).toHaveBeenCalled();
+        expect(screen.getByRole('form')).toBeInTheDocument();
+    });
+
+    test('shows where the pull request stands against its base', async () => {
+        renderDetail();
+
+        expect(await screen.findByText('Ready to merge')).toBeInTheDocument();
+    });
+
+    test('conflicts block merging, and say why', async () => {
+        vi.mocked(axios.get).mockResolvedValue({
+            data: buildPullRequestDetail({ mergeableState: 'dirty' }),
+        });
+        renderDetail();
+        await screen.findByText('Has conflicts');
+
+        const merge = screen.getByRole('button', { name: 'Merge' });
+        expect(merge).toBeDisabled();
+        expect(merge).toHaveAttribute(
+            'title',
+            expect.stringMatching(/conflicts/),
+        );
+    });
+
+    test('other states leave merging to GitHub, which says why it refuses', async () => {
+        vi.mocked(axios.get).mockResolvedValue({
+            data: buildPullRequestDetail({ mergeableState: 'blocked' }),
+        });
+        renderDetail();
+
+        expect(
+            await screen.findByText('Blocked by branch rules'),
+        ).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Merge' })).toBeEnabled();
+    });
+
+    test('no merge for a draft, a closed pull request, or without the manage ability', async () => {
+        const { unmount } = renderDetail({
+            pullRequest: buildPullRequest({ draft: true }),
+        });
+        await screen.findByText('+120');
+        expect(
+            screen.queryByRole('button', { name: 'Merge' }),
+        ).not.toBeInTheDocument();
+        unmount();
+
+        const { unmount: unmountClosed } = renderDetail({
+            pullRequest: buildPullRequest({ state: 'closed' }),
+        });
+        await screen.findByText('+120');
+        expect(
+            screen.queryByRole('button', { name: 'Merge' }),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText('Ready to merge')).not.toBeInTheDocument();
+        unmountClosed();
+
+        renderDetail({ abilities: { manage: false, createBranch: false } });
+        await screen.findByText('+120');
+        expect(
+            screen.queryByRole('button', { name: 'Merge' }),
+        ).not.toBeInTheDocument();
     });
 });

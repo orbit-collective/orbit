@@ -70,6 +70,7 @@ const meta = {
         version: 0,
         busy: false,
         onSetState: () => {},
+        onMerge: async () => true,
         onLinkIssue: async () => true,
         onUnlinkIssue: () => {},
     },
