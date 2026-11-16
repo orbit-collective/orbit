@@ -110,6 +110,29 @@ class IssueRepository
     }
 
     /**
+     * Issues of one project whose title contains the text, or whose number
+     * starts with it (a leading "#" is ignored): what the Development view's
+     * "link an issue" picker searches. Newest first, so recent work is on top.
+     *
+     * @return Collection<array-key, Issue>
+     */
+    public function searchByTitleOrNumber(int $projectId, string $text, int $limit = 8): Collection
+    {
+        $text = ltrim(trim($text), '#');
+        $query = Issue::query();
+        $textType = in_array($query->getConnection()->getDriverName(), ['mysql', 'mariadb'], true) ? 'CHAR' : 'TEXT';
+
+        return $query
+            ->where('project_id', $projectId)
+            ->where(fn ($inner) => $inner
+                ->where('title', 'like', "%$text%")
+                ->orWhereRaw("CAST(issues.number AS {$textType}) LIKE ?", [$text.'%']))
+            ->orderByDesc('number')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Issues the user can see (every project they are a member of) for the
      * command palette. Ranked exact "#number" > title prefix > title
      * substring, then most recently updated; `$number` is the project-scoped

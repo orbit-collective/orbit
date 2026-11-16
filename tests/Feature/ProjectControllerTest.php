@@ -1,14 +1,17 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\GithubRepository;
 use App\Models\Issue;
 use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectIntegration;
 use App\Models\ProjectUser;
 use App\Models\SavedFilter;
 use App\Models\User;
 use App\Support\Cache\CacheVersion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -474,4 +477,59 @@ test('the calendar range must be valid dates', function () {
     addProjectMember($project, $user->id, 'member');
 
     $this->actingAs($user)->get("/projects/$project->id?calendar_from=nope")->assertSessionHasErrors('calendar_from');
+});
+
+test('the project show page tells the Development view what GitHub offers, without calling GitHub', function () {
+    Http::fake();
+    $project = Project::factory()->create();
+    $integration = ProjectIntegration::query()->create([
+        'project_id' => $project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+    GithubRepository::query()->create(['project_integration_id' => $integration->id, 'repository_id' => 5, 'owner' => 'orbit-collective', 'name' => 'orbit']);
+    $member = User::factory()->create(['github_id' => '1']);
+    $viewer = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+    addProjectMember($project, $viewer->id, 'viewer');
+
+    $this->actingAs($member)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->where('development.connected', true)
+        ->where('development.repositories.0', ['id' => 5, 'owner' => 'orbit-collective', 'name' => 'orbit'])
+        ->where('development.abilities', ['manage' => true, 'createBranch' => true])
+        ->where('development.githubLinked', true)
+    );
+
+    $this->actingAs($viewer)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->where('development.abilities', ['manage' => false, 'createBranch' => false])
+        ->where('development.githubLinked', false)
+    );
+
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '/v1/github/'));
+});
+
+test('a project without GitHub reports the Development view as not connected', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+
+    $this->actingAs($member)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->where('development.connected', false)
+        ->where('development.repositories', [])
+    );
+});
+
+test('a member whose role cannot view development gets no Development view', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+    $role = $project->roles()->where('role', 'member')->first();
+    $role->permissions()->detach(Permission::where('key', 'projects.github.development.view')->value('id'));
+    CacheVersion::bump(CacheVersion::MEMBERSHIP);
+
+    $this->actingAs($member)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->where('development', null)
+    );
 });

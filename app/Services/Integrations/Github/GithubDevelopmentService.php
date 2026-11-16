@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Repositories\ExternalIssueLinkRepository;
 use App\Repositories\GithubRepositoryRepository;
+use App\Repositories\IssueRepository;
 use App\Repositories\ProjectIntegrationRepository;
 use App\Services\ActivityLogService;
 use App\Support\Cache\CacheVersion;
@@ -42,6 +43,7 @@ class GithubDevelopmentService
         protected GithubMarkerParser $markerParser,
         protected GithubIssueResolver $issueResolver,
         protected ActivityLogService $activityLogService,
+        protected IssueRepository $issueRepository,
     ) {}
 
     /**
@@ -208,6 +210,20 @@ class GithubDevelopmentService
         $this->activityLogService->log($project->id, "Unlinked #$issue->number from pull request $repository->owner/$repository->name#$number");
 
         $this->forget($project);
+    }
+
+    /**
+     * Issues of the project the picker offers for a pull request, minus the
+     * ones it is already linked to is left to the caller (it knows them).
+     *
+     * @return list<array{id: int, number: int, title: string}>
+     */
+    public function searchIssues(Project $project, string $text): array
+    {
+        return $this->issueRepository->searchByTitleOrNumber($project->id, $text)
+            ->map(fn (Issue $issue) => ['id' => $issue->id, 'number' => $issue->number, 'title' => $issue->title])
+            ->values()
+            ->all();
     }
 
     /** Drops what the view cached, e.g. after a branch was created. */

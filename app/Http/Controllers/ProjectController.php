@@ -7,6 +7,7 @@ use App\Models\Label;
 use App\Models\Project;
 use App\Models\Role;
 use App\Services\ActivityLogService;
+use App\Services\Integrations\Github\GithubDevelopmentService;
 use App\Services\IssueService;
 use App\Services\IssueTypeService;
 use App\Services\LabelService;
@@ -48,7 +49,9 @@ class ProjectController extends Controller
 
     protected PriorityService $priorityService;
 
-    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService, RoleService $roleService, IssueTypeService $issueTypeService, PriorityService $priorityService)
+    protected GithubDevelopmentService $developmentService;
+
+    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService, RoleService $roleService, IssueTypeService $issueTypeService, PriorityService $priorityService, GithubDevelopmentService $developmentService)
     {
         $this->projectService = $projectService;
         $this->issueService = $issueService;
@@ -58,6 +61,7 @@ class ProjectController extends Controller
         $this->roleService = $roleService;
         $this->issueTypeService = $issueTypeService;
         $this->priorityService = $priorityService;
+        $this->developmentService = $developmentService;
     }
 
     /**
@@ -114,6 +118,7 @@ class ProjectController extends Controller
             'nextIssueId' => fn () => $this->issueService->peekNextIssueId($project),
             'issueAbilities' => fn () => $this->issueAbilities($request, $project),
             'projectRole' => fn () => $project->roleOf($request->user()),
+            'development' => fn () => $this->developmentPayload($request, $project),
         ]);
     }
 
@@ -267,6 +272,32 @@ class ProjectController extends Controller
             'assign' => $canUpdate && $project->hasPermission($user, Permission::ISSUES_ASSIGN),
             'changePriority' => $canUpdate && $project->hasPermission($user, Permission::ISSUES_CHANGE_PRIORITY),
             'changeLabels' => $canUpdate && $project->hasPermission($user, Permission::ISSUES_CHANGE_LABELS),
+        ];
+    }
+
+    /**
+     * What the Development view needs from the page itself, without a GitHub
+     * call: whether GitHub is connected, the project's repositories and what
+     * the user may do there. `null` hides the view for a user who may not
+     * open it (the actual data is fetched from the view's own JSON routes).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function developmentPayload(Request $request, Project $project): ?array
+    {
+        $user = $request->user();
+
+        if (! $project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_VIEW)) {
+            return null;
+        }
+
+        return [
+            ...$this->developmentService->overview($project),
+            'abilities' => [
+                'manage' => $project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_MANAGE),
+                'createBranch' => $project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_CREATE),
+            ],
+            'githubLinked' => $user->github_id !== null,
         ];
     }
 }

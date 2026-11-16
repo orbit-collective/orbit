@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/branches', [GithubDevelopmentController::class, 'branches'])->name('branches.index');
         Route::post('/branches', [GithubDevelopmentController::class, 'createBranch'])->name('branches.store');
         Route::get('/checks', [GithubDevelopmentController::class, 'checks'])->name('checks.show');
+        Route::get('/issues', [GithubDevelopmentController::class, 'searchIssues'])->name('issues.search');
         Route::get('/insights', [GithubDevelopmentController::class, 'insights'])->name('insights.show');
     });
     Route::post('/issues/{issue}/github/branches', [IssueGithubDevelopmentController::class, 'createBranch'])->name('issues.github.branches.store');
