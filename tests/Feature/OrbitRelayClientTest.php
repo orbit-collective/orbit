@@ -268,7 +268,7 @@ test('the development reads send their query and unwrap the envelope', function 
         '*/v1/github/insights*' => Http::response(['success' => true, 'data' => ['contributors' => []]]),
     ]);
 
-    expect($this->client->listPullRequests('tok', 5, 'open', 2, 10))->toBe([['number' => 1]])
+    expect($this->client->listPullRequests('tok', 5, 'open', 2, 10))->toBe(['pullRequests' => [['number' => 1]], 'hasMore' => false])
         ->and($this->client->listCommits('tok', 5, 'feat', 1, 30))->toBe([['sha' => 'a']])
         ->and($this->client->listBranches('tok', 5)['branches'])->toBe([['name' => 'main']])
         ->and($this->client->getChecks('tok', 5, 'abc'))->toBe(['state' => 'passed'])
@@ -310,4 +310,28 @@ test('listBranches copes with an orbit-api that does not report a total yet', fu
     Http::fake(['*/v1/github/branches*' => Http::response(['success' => true, 'data' => ['branches' => [['name' => 'a'], ['name' => 'b']]]])]);
 
     expect($this->client->listBranches('tok', 5))->toMatchArray(['total' => 2, 'page' => 1, 'perPage' => 10]);
+});
+
+test('listPullRequests sends the date range and leaves CI out on request', function () {
+    Http::fake(['*/v1/github/pull-requests*' => Http::response(['success' => true, 'data' => ['pullRequests' => [['number' => 1], ['number' => 2]], 'hasMore' => true]])]);
+
+    $result = $this->client->listPullRequests('tok', 5, 'all', 1, 2, '2026-08-01', withCi: false);
+
+    expect($result['hasMore'])->toBeTrue();
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'since=2026-08-01') && str_contains($request->url(), 'ci=none'));
+});
+
+test('listPullRequests asks for CI inline by default and guesses hasMore for an older orbit-api', function () {
+    Http::fake(['*/v1/github/pull-requests*' => Http::response(['success' => true, 'data' => ['pullRequests' => [['number' => 1], ['number' => 2]]]])]);
+
+    expect($this->client->listPullRequests('tok', 5, 'all', 1, 2)['hasMore'])->toBeTrue()
+        ->and($this->client->listPullRequests('tok', 5, 'all', 1, 3)['hasMore'])->toBeFalse();
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'ci=') || str_contains($request->url(), 'since='));
+});
+
+test('getChecksBatch sends the refs together and returns them by ref', function () {
+    Http::fake(['*/v1/github/checks*' => Http::response(['success' => true, 'data' => ['checks' => ['abc' => ['state' => 'passed'], 'def' => null]]])]);
+
+    expect($this->client->getChecksBatch('tok', 5, ['abc', 'def']))->toBe(['abc' => ['state' => 'passed'], 'def' => null]);
+    Http::assertSent(fn ($request) => str_contains(urldecode($request->url()), 'refs=abc,def'));
 });

@@ -231,21 +231,32 @@ class OrbitRelayClient
      * The Development view's read models. orbit-api already shapes these
      * (see its docs/api/github.md), so they stay plain arrays here.
      *
-     * @return list<array<string, mixed>>
+     * One page of pull requests, newest update first. `$since` (an ISO date)
+     * keeps only what was updated since then and `hasMore` says whether the
+     * next page can still hold more inside that range. CI is left out unless
+     * asked for: it is two GitHub calls per open pull request.
+     *
+     * @return array{pullRequests: list<array<string, mixed>>, hasMore: bool}
      */
-    public function listPullRequests(string $relayToken, int $repositoryId, string $state, int $page, int $perPage): array
+    public function listPullRequests(string $relayToken, int $repositoryId, string $state, int $page, int $perPage, ?string $since = null, bool $withCi = true): array
     {
         $data = $this->request(
-            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/pull-requests', [
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/pull-requests', array_filter([
                 'repositoryId' => $repositoryId,
                 'state' => $state,
                 'page' => $page,
                 'perPage' => $perPage,
-            ]),
+                'since' => $since,
+                'ci' => $withCi ? null : 'none',
+            ], fn ($value) => $value !== null)),
             'GET /v1/github/pull-requests',
         );
 
-        return $data['pullRequests'];
+        return [
+            'pullRequests' => $data['pullRequests'],
+            // An orbit-api that does not report it: a full page may have a next one.
+            'hasMore' => $data['hasMore'] ?? count($data['pullRequests']) === $perPage,
+        ];
     }
 
     /** @return array<string, mixed> */
@@ -328,6 +339,26 @@ class OrbitRelayClient
             ]),
             'GET /v1/github/checks',
         );
+    }
+
+    /**
+     * The CI of several commits in one call (at most 20), by ref; a ref whose
+     * lookup failed is null.
+     *
+     * @param  list<string>  $refs
+     * @return array<string, array<string, mixed>|null>
+     */
+    public function getChecksBatch(string $relayToken, int $repositoryId, array $refs): array
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/checks', [
+                'repositoryId' => $repositoryId,
+                'refs' => implode(',', $refs),
+            ]),
+            'GET /v1/github/checks',
+        );
+
+        return $data['checks'];
     }
 
     /** @return array<string, mixed> */
