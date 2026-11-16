@@ -39,6 +39,7 @@ documentation/
     dashboard/               <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-types/             <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-views/             <- angielskie tłumaczenie każdego przewodnika poniżej
+    development-view/        <- angielskie tłumaczenie każdego przewodnika poniżej
     rich-text-editor/        <- angielskie tłumaczenie każdego przewodnika poniżej
     backup/                  <- angielskie tłumaczenie każdego przewodnika poniżej
     project-onboarding/      <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -143,6 +144,10 @@ documentation/
       README.md              <- indeks tej kategorii
       01-add-a-new-issue-view.md
       02-load-view-data-lazily.md
+    development-view/
+      README.md              <- indeks tej kategorii
+      01-add-a-development-read-model.md
+      02-link-issues-to-pull-requests.md
     rich-text-editor/
       README.md              <- indeks tej kategorii
       01-add-a-new-tiptap-extension.md
