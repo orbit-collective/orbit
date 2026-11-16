@@ -72,6 +72,7 @@ describe('DevelopmentSettingsModal', () => {
         expect(onChange).toHaveBeenCalledWith({
             sections: {
                 stats: true,
+                issues: true,
                 insights: true,
                 branches: false,
                 commits: true,

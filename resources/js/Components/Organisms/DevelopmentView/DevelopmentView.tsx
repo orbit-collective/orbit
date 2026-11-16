@@ -15,6 +15,9 @@ import CreateBranchModal from '@/Components/Organisms/CreateBranchModal/CreateBr
 import DevelopmentEmptyState from '@/Components/Organisms/DevelopmentEmptyState/DevelopmentEmptyState';
 import DevelopmentSettingsModal from '@/Components/Organisms/DevelopmentSettingsModal/DevelopmentSettingsModal';
 import DevelopmentStats from '@/Components/Organisms/DevelopmentStats/DevelopmentStats';
+import GithubIssuesPanel, {
+    GithubIssueState,
+} from '@/Components/Organisms/GithubIssuesPanel/GithubIssuesPanel';
 import PullRequestsPanel from '@/Components/Organisms/PullRequestsPanel/PullRequestsPanel';
 import RepositoryInsights from '@/Components/Organisms/RepositoryInsights/RepositoryInsights';
 import { useCiSummaries } from '@/hooks/useCiSummaries';
@@ -26,6 +29,7 @@ import { useStoredChoice } from '@/hooks/useStoredChoice';
 import {
     DevelopmentBranch,
     DevelopmentCommit,
+    DevelopmentGithubIssue,
     DevelopmentInsights,
     DevelopmentOverview,
 } from '@/types/Development';
@@ -143,6 +147,27 @@ function DevelopmentBoard({
             : null,
         t('development_view.branches_failed'),
     );
+    const [issueState, setIssueState] = useStoredChoice<GithubIssueState>(
+        'developmentGithubIssueState',
+        'open',
+        ['open', 'closed'],
+    );
+    // One page of up to a hundred, in the same time range as the pull requests.
+    const githubIssues = useDevelopmentResource<{
+        issues: DevelopmentGithubIssue[];
+        hasMore: boolean;
+    }>(
+        route_('github-issues.index'),
+        sections.issues
+            ? {
+                  repository_id: repository.id,
+                  state: issueState,
+                  since,
+                  per_page: 100,
+              }
+            : null,
+        t('development_view.issues_failed'),
+    );
     const defaultBranch = insights.data?.repository.defaultBranch ?? null;
     // No branch is the default branch: the list does not wait for the statistics to say which.
     const commits = useDevelopmentResource<{ commits: DevelopmentCommit[] }>(
@@ -193,12 +218,14 @@ function DevelopmentBoard({
     const { reload: reloadInsights } = insights;
     const { reload: reloadBranches } = branches;
     const { reload: reloadCommits } = commits;
+    const { reload: reloadGithubIssues } = githubIssues;
     const { reload: reloadCi } = ci;
     const reloadAll = useCallback(() => {
         reloadPullRequests();
         reloadInsights();
         reloadBranches();
         reloadCommits();
+        reloadGithubIssues();
         reloadCi();
         setVersion((current) => current + 1);
     }, [
@@ -206,6 +233,7 @@ function DevelopmentBoard({
         reloadInsights,
         reloadBranches,
         reloadCommits,
+        reloadGithubIssues,
         reloadCi,
     ]);
 
@@ -408,6 +436,35 @@ function DevelopmentBoard({
                         onLinkIssue={actions.linkIssue}
                         onUnlinkIssue={actions.unlinkIssue}
                     />
+                    {sections.issues && (
+                        <div className="mt-4">
+                            <GithubIssuesPanel
+                                key={repository.id}
+                                repositoryUrl={repositoryUrl}
+                                issues={githubIssues.data?.issues ?? null}
+                                state={issueState}
+                                onStateChange={setIssueState}
+                                hasMore={githubIssues.data?.hasMore ?? false}
+                                rangeLabel={t(
+                                    `development_settings_modal.ranges.${settings.range}`,
+                                )}
+                                perPage={settings.issuesPerPage}
+                                perPageOptions={[...PAGE_SIZES]}
+                                onPerPageChange={(size) =>
+                                    update({ issuesPerPage: size })
+                                }
+                                error={githubIssues.error}
+                                onRetry={githubIssues.reload}
+                                onCreateBranch={
+                                    canCreateBranch
+                                        ? (name) =>
+                                              actions.createBranch(name, null)
+                                        : undefined
+                                }
+                                busy={actions.busy}
+                            />
+                        </div>
+                    )}
                 </Reveal>
                 {showSide && (
                     <Reveal className="flex min-w-0 flex-col gap-4">

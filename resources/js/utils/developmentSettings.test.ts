@@ -17,11 +17,13 @@ describe('normalizeSettings', () => {
             range: '30d',
             pullRequestLimit: 500,
             pullRequestsPerPage: 25,
+            issuesPerPage: 25,
             branchesPerPage: 10,
             activityWeeks: 26,
             commitsShown: 15,
             sections: {
                 stats: false,
+                issues: true,
                 insights: true,
                 branches: false,
                 commits: true,
@@ -32,11 +34,13 @@ describe('normalizeSettings', () => {
             range: '30d',
             pullRequestLimit: 500,
             pullRequestsPerPage: 25,
+            issuesPerPage: 25,
             branchesPerPage: 10,
             activityWeeks: 26,
             commitsShown: 15,
             sections: {
                 stats: false,
+                issues: true,
                 insights: true,
                 branches: false,
                 commits: true,
@@ -63,6 +67,7 @@ describe('normalizeSettings', () => {
         expect(settings.activityWeeks).toBe(12);
         expect(settings.sections).toEqual({
             stats: true,
+            issues: true,
             insights: false,
             branches: true,
             commits: true,

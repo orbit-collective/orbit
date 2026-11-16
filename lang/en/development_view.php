@@ -14,5 +14,6 @@ return [
     'pull_requests_failed' => 'Could not load pull requests from GitHub.',
     'insights_failed' => 'Could not load repository statistics.',
     'branches_failed' => 'Could not load branches.',
+    'issues_failed' => 'Could not load the GitHub issues.',
     'commits_failed' => 'Could not load commits.',
 ];

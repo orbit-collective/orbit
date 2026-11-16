@@ -6,6 +6,7 @@ import {
     buildBranch,
     buildCi,
     buildCommit,
+    buildGithubIssue,
     buildInsights,
     buildOverview,
     buildPullRequest,
@@ -63,6 +64,10 @@ const answers =
                 total: 2,
             },
             'commits.index': { commits: [buildCommit()] },
+            'github-issues.index': {
+                issues: [buildGithubIssue()],
+                hasMore: false,
+            },
             ...overrides,
         };
         const key = Object.keys(table).find((name) =>
@@ -191,6 +196,7 @@ describe('DevelopmentView', () => {
             JSON.stringify({
                 sections: {
                     stats: false,
+                    issues: false,
                     insights: false,
                     branches: false,
                     commits: false,
@@ -209,6 +215,9 @@ describe('DevelopmentView', () => {
         expect(urls.some((url) => url.includes('insights.show'))).toBe(false);
         expect(urls.some((url) => url.includes('branches.index'))).toBe(false);
         expect(urls.some((url) => url.includes('commits.index'))).toBe(false);
+        expect(urls.some((url) => url.includes('github-issues.index'))).toBe(
+            false,
+        );
         expect(screen.queryByText('Commit activity')).not.toBeInTheDocument();
         expect(
             screen.queryByText('Open pull requests'),
@@ -474,5 +483,65 @@ describe('DevelopmentView', () => {
             }),
         ).toBeInTheDocument();
         expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(5);
+    });
+
+    test('lists the GitHub issues of the same time range', async () => {
+        renderView();
+
+        expect(
+            await screen.findByText('Fix the login redirect'),
+        ).toBeInTheDocument();
+        expect(axios.get).toHaveBeenCalledWith(
+            '/projects.development.github-issues.index/3',
+            expect.objectContaining({
+                params: {
+                    repository_id: 1,
+                    state: 'open',
+                    since: sinceFor(DEFAULT_SETTINGS.range),
+                    per_page: 100,
+                },
+            }),
+        );
+    });
+
+    test('a click on an issue creates a branch named after it from the default branch', async () => {
+        renderView();
+
+        await userEvent.click(
+            await screen.findByRole('button', {
+                name: 'Create branch 12-fix-the-login-redirect',
+            }),
+        );
+
+        await waitFor(() =>
+            expect(axios.post).toHaveBeenCalledWith(
+                '/projects.development.branches.store/3',
+                {
+                    repository_id: 1,
+                    name: '12-fix-the-login-redirect',
+                },
+            ),
+        );
+        expect(addAlert).toHaveBeenCalledWith(
+            'Created branch 12-fix-the-login-redirect.',
+            'success',
+        );
+        expect(
+            await screen.findByRole('button', {
+                name: 'Branch 12-fix-the-login-redirect created',
+            }),
+        ).toBeDisabled();
+    });
+
+    test('there is no branch button for someone who may not create branches', async () => {
+        renderView(
+            buildOverview({ abilities: { manage: true, createBranch: false } }),
+        );
+
+        await screen.findByText('Fix the login redirect');
+
+        expect(
+            screen.queryByRole('button', { name: /Create branch 12/ }),
+        ).not.toBeInTheDocument();
     });
 });

@@ -126,3 +126,19 @@ export interface DevelopmentOverview {
     /** Whether the user may open the GitHub integration settings (to connect it or add a repository). */
     canConfigure: boolean;
 }
+
+/** An issue of the repository on GitHub (not one of Orbit's). */
+export interface DevelopmentGithubIssue {
+    id: number;
+    number: number;
+    title: string;
+    state: 'open' | 'closed';
+    url: string;
+    author: DevelopmentPerson | null;
+    labels: Array<{ name: string; color: string }>;
+    assignees: DevelopmentPerson[];
+    commentCount: number;
+    createdAt: string;
+    updatedAt: string;
+    closedAt: string | null;
+}

@@ -35,6 +35,7 @@ export const SectionsHidden: Story = {
             range: '7d',
             sections: {
                 stats: false,
+                issues: true,
                 insights: false,
                 branches: true,
                 commits: false,

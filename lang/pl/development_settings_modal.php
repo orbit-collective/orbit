@@ -32,6 +32,7 @@ return [
     'sections_hint' => 'Ukryta sekcja nie jest pokazywana ani pobierana z GitHuba, dzięki czemu widok jest lżejszy.',
     'section' => [
         'stats' => 'Statystyki',
+        'issues' => 'Zgłoszenia GitHub',
         'insights' => 'Aktywność, autorzy i języki',
         'branches' => 'Gałęzie',
         'commits' => 'Ostatnie commity',

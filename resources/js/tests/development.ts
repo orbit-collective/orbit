@@ -2,6 +2,7 @@ import {
     CiSummary,
     DevelopmentBranch,
     DevelopmentCommit,
+    DevelopmentGithubIssue,
     DevelopmentInsights,
     DevelopmentOverview,
     DevelopmentPullRequest,
@@ -152,5 +153,23 @@ export const buildOverview = (
     abilities: { manage: true, createBranch: true },
     githubLinked: true,
     canConfigure: true,
+    ...overrides,
+});
+
+export const buildGithubIssue = (
+    overrides: Partial<DevelopmentGithubIssue> = {},
+): DevelopmentGithubIssue => ({
+    id: 9001,
+    number: 12,
+    title: 'Fix the login redirect',
+    state: 'open',
+    url: 'https://github.com/orbit-collective/orbit/issues/12',
+    author: { login: 'ada', avatarUrl: 'https://avatars.test/ada.png' },
+    labels: [{ name: 'bug', color: 'd73a4a' }],
+    assignees: [],
+    commentCount: 3,
+    createdAt: daysAgo(5),
+    updatedAt: daysAgo(1),
+    closedAt: null,
     ...overrides,
 });
