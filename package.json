@@ -73,7 +73,7 @@
         "@tiptap/pm": "^3.33.1",
         "@tiptap/react": "^3.33.1",
         "@tiptap/starter-kit": "^3.33.1",
-        "@tiptap/suggestion": "^3.33.1",
+        "@tiptap/suggestion": "^3.34.0",
         "axios": "^1.21.1",
         "class-variance-authority": "^0.7.1",
         "laravel-echo": "^2.6.3",
