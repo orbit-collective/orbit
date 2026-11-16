@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{project}/issues/{issue}', [IssueController::class, 'show'])->name('issues.show');
     Route::delete('/issues/bulk-destroy', [IssueController::class, 'bulkDestroy'])->name('issues.bulk-destroy');
     Route::prefix('/projects/{project}/development')->middleware('throttle:120,1')->name('projects.development.')->group(function () {
+        Route::post('/refresh', [GithubDevelopmentController::class, 'refresh'])->name('refresh');
         Route::get('/pull-requests', [GithubDevelopmentController::class, 'pullRequests'])->name('pull-requests.index');
         Route::get('/pull-requests/{number}', [GithubDevelopmentController::class, 'pullRequest'])->whereNumber('number')->name('pull-requests.show');
         Route::post('/pull-requests/{number}/state', [GithubDevelopmentController::class, 'setPullRequestState'])->whereNumber('number')->name('pull-requests.state');
