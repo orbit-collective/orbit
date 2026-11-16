@@ -203,7 +203,16 @@ function CommandPalette() {
         return () => {
             resume();
             unregisterExternalModal?.(baseId);
-            previouslyFocused?.focus?.();
+
+            // A command may have moved the focus on purpose (Search
+            // integrations puts it in a field). Give it back to the control
+            // that had it only when nothing else holds it: the dialog is gone
+            // by now, so the focus is on the body.
+            const active = document.activeElement;
+
+            if (!active || active === document.body) {
+                previouslyFocused?.focus?.();
+            }
         };
     }, [isOpen, baseId, registerExternalModal, unregisterExternalModal]);
 
