@@ -72,10 +72,16 @@ const getCondensedPageNumbers = (
 };
 
 const Pagination = ({
-    links,
-    from,
-    to,
+    links = [],
+    from: fromProp,
+    to: toProp,
     total,
+    variant = 'default',
+    page,
+    perPage,
+    onPageChange,
+    onPerPageChange,
+    perPageOptions = rowsPerPageCounts,
     queryParams,
     pageParam = 'page',
     perPageParam = 'perPage',
@@ -89,7 +95,10 @@ const Pagination = ({
 
     if (total === 0) return null;
 
-    const rowsPerPageOptions: DropdownOptionItem[] = rowsPerPageCounts.map(
+    const controlled = onPageChange !== undefined;
+    const compact = variant === 'compact';
+
+    const rowsPerPageOptions: DropdownOptionItem[] = perPageOptions.map(
         (count) => ({
             value: String(count),
             label: t('pagination_bar.rows', { count }),
@@ -108,10 +117,16 @@ const Pagination = ({
         if (kind === 'next') return <Icon name="ChevronRight" size={16} />;
         return label;
     };
-    const currentPerPage: string =
-        queryParams?.[perPageParam] || defaultPerPage.toString();
+    const currentPerPage: string = controlled
+        ? String(perPage ?? defaultPerPage)
+        : queryParams?.[perPageParam] || defaultPerPage.toString();
 
     const handlePerPageChange = (newPerPage: number) => {
+        if (controlled) {
+            onPerPageChange?.(newPerPage);
+            return;
+        }
+
         const newParams = {
             ...queryParams,
             [perPageParam]: newPerPage,
@@ -142,14 +157,57 @@ const Pagination = ({
         .slice(1, -1)
         .filter((link) => !isNaN(Number(link.label)));
     const activeLink = numericLinks.find((link) => link.active);
-    const currentPage = activeLink ? Number(activeLink.label) : 1;
-    const lastPage =
-        numericLinks.length > 0
-            ? Math.max(...numericLinks.map((link) => Number(link.label)))
-            : 1;
+    const size = Math.max(1, Number(currentPerPage) || defaultPerPage);
+    const lastPage = controlled
+        ? Math.max(1, Math.ceil(total / size))
+        : numericLinks.length > 0
+          ? Math.max(...numericLinks.map((link) => Number(link.label)))
+          : 1;
+    const currentPage = controlled
+        ? Math.min(Math.max(1, page ?? 1), lastPage)
+        : activeLink
+          ? Number(activeLink.label)
+          : 1;
+    const from = controlled ? (currentPage - 1) * size + 1 : fromProp;
+    const to = controlled ? Math.min(currentPage * size, total) : toProp;
     const pageLinkMap = new Map(
         numericLinks.map((link) => [Number(link.label), link]),
     );
+    const showNav = controlled ? lastPage > 1 : numericLinks.length > 1;
+
+    const buttonSize = compact ? 'min-w-7 h-7 px-1.5 rounded-full text-xs' : '';
+
+    // The controlled mode has no URLs: its numbers are buttons.
+    const renderButton = (
+        label: string,
+        target: number,
+        kind: LinkKind,
+        isActive: boolean,
+        isDisabled: boolean,
+    ) => {
+        const hideOnMobile = kind === 'page' && !isActive;
+
+        return (
+            <button
+                key={kind === 'page' ? target : kind}
+                type="button"
+                disabled={isDisabled}
+                onClick={() => onPageChange?.(target)}
+                aria-label={getLinkAriaLabel(label, kind)}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                    paginationVariants({
+                        active: isActive,
+                        disabled: isDisabled,
+                    }),
+                    buttonSize,
+                    hideOnMobile ? 'hidden sm:flex' : 'flex',
+                )}
+            >
+                {renderLabel(label, kind)}
+            </button>
+        );
+    };
 
     const renderLink = (
         link: { url: string | null; label: string; active: boolean },
@@ -161,10 +219,14 @@ const Pagination = ({
         // Hide numeric page links on very small screens, except current page
         const isNumeric = !isNaN(Number(link.label));
         const shouldHideOnMobile = isNumeric && !link.active;
-        const className = `${paginationVariants({
-            active: link.active,
-            disabled: isLinkDisabled,
-        })} ${shouldHideOnMobile ? 'hidden sm:flex' : 'flex'}`;
+        const className = cn(
+            paginationVariants({
+                active: link.active,
+                disabled: isLinkDisabled,
+            }),
+            buttonSize,
+            shouldHideOnMobile ? 'hidden sm:flex' : 'flex',
+        );
 
         if (isLinkDisabled) {
             return (
@@ -197,11 +259,18 @@ const Pagination = ({
     return (
         <div
             className={cn(
-                'relative mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 lg:flex-row lg:gap-0',
+                compact
+                    ? 'relative mt-3 flex flex-col items-center justify-between gap-3 lg:flex-row lg:gap-4'
+                    : 'relative mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 lg:flex-row lg:gap-0',
                 className,
             )}
         >
-            <div className="text-center text-sm text-(--text-gray-color) lg:text-left">
+            <div
+                className={cn(
+                    'text-center text-(--text-gray-color) lg:text-left',
+                    compact ? 'text-xs' : 'text-sm',
+                )}
+            >
                 {t('pagination_bar.showing_prefix')}{' '}
                 <span className="font-semibold text-(--text-color)">
                     {from || 0}
@@ -249,36 +318,67 @@ const Pagination = ({
                         )}
                     />
                 </div>
-                {links && numericLinks.length > 1 && (
+                {showNav && (
                     <nav
                         aria-label={t('pagination_bar.nav')}
-                        className="flex scrollbar-none flex-nowrap items-center justify-center gap-1 overflow-x-auto sm:gap-2"
+                        className={cn(
+                            'flex scrollbar-none flex-nowrap items-center justify-center overflow-x-auto',
+                            compact ? 'gap-1' : 'gap-1 sm:gap-2',
+                        )}
                     >
-                        {renderLink(prevLink, 'prev', 'prev')}
+                        {controlled
+                            ? renderButton(
+                                  '',
+                                  currentPage - 1,
+                                  'prev',
+                                  false,
+                                  currentPage <= 1,
+                              )
+                            : renderLink(prevLink, 'prev', 'prev')}
                         {getCondensedPageNumbers(currentPage, lastPage).map(
-                            (page, index) =>
-                                page === 'ellipsis' ? (
+                            (pageNumber, index) =>
+                                pageNumber === 'ellipsis' ? (
                                     <span
                                         key={`ellipsis-${index}`}
                                         aria-hidden="true"
-                                        className={`${paginationVariants({
-                                            disabled: true,
-                                        })} hidden sm:flex`}
+                                        className={cn(
+                                            paginationVariants({
+                                                disabled: true,
+                                            }),
+                                            buttonSize,
+                                            'hidden sm:flex',
+                                        )}
                                     >
                                         ...
                                     </span>
+                                ) : controlled ? (
+                                    renderButton(
+                                        String(pageNumber),
+                                        pageNumber,
+                                        'page',
+                                        pageNumber === currentPage,
+                                        false,
+                                    )
                                 ) : (
                                     renderLink(
-                                        pageLinkMap.get(page) ?? {
+                                        pageLinkMap.get(pageNumber) ?? {
                                             url: null,
-                                            label: String(page),
-                                            active: page === currentPage,
+                                            label: String(pageNumber),
+                                            active: pageNumber === currentPage,
                                         },
-                                        page,
+                                        pageNumber,
                                     )
                                 ),
                         )}
-                        {renderLink(nextLink, 'next', 'next')}
+                        {controlled
+                            ? renderButton(
+                                  '',
+                                  currentPage + 1,
+                                  'next',
+                                  false,
+                                  currentPage >= lastPage,
+                              )
+                            : renderLink(nextLink, 'next', 'next')}
                     </nav>
                 )}
             </div>
