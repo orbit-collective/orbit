@@ -135,7 +135,29 @@ describe('useDevelopmentResource', () => {
         );
     });
 
-    test('keeps showing the old data while a new request is in flight, and ignores a late answer of an aborted one', async () => {
+    test('keeps showing the data while the same request is reloaded', async () => {
+        const again = deferred<{ data: string }>();
+        vi.mocked(axios.get)
+            .mockResolvedValueOnce({ data: 'first' })
+            .mockReturnValueOnce(again.promise as never);
+
+        const { result } = renderHook(() =>
+            useDevelopmentResource<string>('/url', { id: 1 }, 'failed'),
+        );
+        await waitFor(() => expect(result.current.data).toBe('first'));
+
+        act(() => result.current.reload());
+
+        expect(result.current.data).toBe('first');
+        expect(result.current.loading).toBe(true);
+        await act(async () => {
+            again.resolve({ data: 'second' });
+            await again.promise;
+        });
+        await waitFor(() => expect(result.current.data).toBe('second'));
+    });
+
+    test('never shows the answer of another request, and ignores a late answer of an aborted one', async () => {
         const first = deferred<{ data: string }>();
         const second = deferred<{ data: string }>();
         vi.mocked(axios.get)
@@ -151,7 +173,7 @@ describe('useDevelopmentResource', () => {
         await waitFor(() => expect(result.current.data).toBe('first'));
 
         rerender({ id: 2 });
-        expect(result.current.data).toBe('first');
+        expect(result.current.data).toBeNull();
         expect(result.current.loading).toBe(true);
 
         rerender({ id: 3 });
@@ -168,6 +190,22 @@ describe('useDevelopmentResource', () => {
         expect(result.current.data).toBe('third');
     });
 
+    test('a failed reload keeps what was shown next to the error', async () => {
+        vi.mocked(axios.get)
+            .mockResolvedValueOnce({ data: 'first' })
+            .mockRejectedValueOnce({ response: { data: { message: 'Down' } } });
+
+        const { result } = renderHook(() =>
+            useDevelopmentResource<string>('/url', { id: 1 }, 'failed'),
+        );
+        await waitFor(() => expect(result.current.data).toBe('first'));
+
+        act(() => result.current.reload());
+
+        await waitFor(() => expect(result.current.error).toBe('Down'));
+        expect(result.current.data).toBe('first');
+    });
+
     test('a cancelled request is not an error', async () => {
         vi.mocked(axios.isCancel).mockReturnValue(true);
         vi.mocked(axios.get).mockRejectedValue(new Error('canceled'));
@@ -176,7 +214,7 @@ describe('useDevelopmentResource', () => {
             useDevelopmentResource<string>('/url', { a: 1 }, 'failed'),
         );
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+        await waitFor(() => expect(axios.get).toHaveBeenCalled());
         expect(result.current.error).toBeNull();
     });
 });

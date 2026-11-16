@@ -6,6 +6,7 @@ import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import Reveal from '@/Components/Atoms/Reveal/Reveal';
+import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatusPill from '@/Components/Atoms/StatusPill/StatusPill';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import BranchesPanel from '@/Components/Organisms/BranchesPanel/BranchesPanel';
@@ -208,7 +209,25 @@ function DevelopmentBoard({
                             {repositoryLabel(repository)}
                         </h3>
                     )}
-                    {insights.data && (
+                    {!insights.data ? (
+                        <div
+                            role="status"
+                            aria-label={t(
+                                'development_view.loading_repository',
+                            )}
+                            className="flex items-center gap-2"
+                        >
+                            <Skeleton className="h-5 w-16 rounded-full" />
+                            <Skeleton
+                                index={1}
+                                className="h-5 w-10 rounded-full"
+                            />
+                            <Skeleton
+                                index={2}
+                                className="h-5 w-10 rounded-full"
+                            />
+                        </div>
+                    ) : (
                         <ul className="m-0 flex list-none flex-wrap items-center gap-2 p-0">
                             <li>
                                 <StatusPill
@@ -279,6 +298,7 @@ function DevelopmentBoard({
             <div className="grid min-h-0 gap-4 xl:grid-cols-3">
                 <Reveal className="min-w-0 xl:col-span-2">
                     <PullRequestsPanel
+                        key={repository.id}
                         projectId={project.id}
                         repositoryId={repository.id}
                         repositoryUrl={repositoryUrl}

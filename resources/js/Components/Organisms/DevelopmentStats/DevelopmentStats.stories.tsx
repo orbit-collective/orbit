@@ -39,6 +39,8 @@ export const Default: Story = {
 export const Loading: Story = {
     args: { pullRequests: null, insights: null },
     play: async ({ canvasElement }) => {
-        await expect(within(canvasElement).getAllByText('—')).toHaveLength(5);
+        await expect(
+            within(canvasElement).getAllByTestId('skeleton'),
+        ).toHaveLength(5);
     },
 };

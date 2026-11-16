@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'loading_repository' => 'Loading repository',
     'repository' => 'Repository',
     'private' => 'Private',
     'public' => 'Public',
