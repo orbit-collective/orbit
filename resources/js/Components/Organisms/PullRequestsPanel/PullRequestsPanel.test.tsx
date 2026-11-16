@@ -9,6 +9,7 @@ import {
 } from '@/tests/development';
 import PullRequestsPanel, {
     PULL_REQUESTS_PAGE_SIZE,
+    PULL_REQUESTS_PER_PAGE,
 } from './PullRequestsPanel';
 
 vi.mock('axios');
@@ -249,5 +250,46 @@ describe('PullRequestsPanel', () => {
         expect(
             screen.queryByRole('link', { name: /See the rest on GitHub/ }),
         ).not.toBeInTheDocument();
+    });
+
+    test('pages through a long list instead of listing everything', async () => {
+        const many = Array.from(
+            { length: PULL_REQUESTS_PER_PAGE + 3 },
+            (_, index) =>
+                buildPullRequest({
+                    number: index + 1,
+                    id: index + 1,
+                    title: `Pull request ${index + 1}`,
+                }),
+        );
+        renderPanel({ pullRequests: many });
+
+        expect(screen.getAllByRole('article')).toHaveLength(
+            PULL_REQUESTS_PER_PAGE,
+        );
+        expect(
+            screen.getByText(
+                `1–${PULL_REQUESTS_PER_PAGE} of ${PULL_REQUESTS_PER_PAGE + 3}`,
+            ),
+        ).toBeInTheDocument();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Next page' }),
+        );
+        expect(screen.getAllByRole('article')).toHaveLength(3);
+        expect(screen.getByText('Pull request 9')).toBeInTheDocument();
+
+        // A filter change starts again from the first page.
+        await userEvent.click(screen.getByRole('button', { name: /^Merged/ }));
+        await userEvent.click(screen.getByRole('button', { name: /^Open/ }));
+        expect(screen.getAllByRole('article')).toHaveLength(
+            PULL_REQUESTS_PER_PAGE,
+        );
+    });
+
+    test('shows no pager for a short list', () => {
+        renderPanel();
+
+        expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     });
 });

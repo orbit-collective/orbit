@@ -8,6 +8,6 @@ return [
     'retry' => 'Spróbuj ponownie',
     'loading' => 'Wczytywanie gałęzi',
     'empty' => 'To repozytorium nie ma gałęzi.',
-    'show_more' => 'Pokaż jeszcze :count',
-    'show_less' => 'Pokaż mniej',
+    'pager' => 'Strony gałęzi',
+    'pager' => 'Strony gałęzi',
 ];

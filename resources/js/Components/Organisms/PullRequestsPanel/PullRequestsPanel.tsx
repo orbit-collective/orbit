@@ -5,6 +5,7 @@ import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SegmentedControl from '@/Components/Atoms/SegmentedControl/SegmentedControl';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
+import ListPager from '@/Components/Molecules/ListPager/ListPager';
 import PullRequestDetail from '@/Components/Molecules/PullRequestDetail/PullRequestDetail';
 import PullRequestRow from '@/Components/Molecules/PullRequestRow/PullRequestRow';
 import LinkIssueModal from '@/Components/Organisms/LinkIssueModal/LinkIssueModal';
@@ -17,7 +18,10 @@ import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
 
 /** The list is read in one page of this size; a repository with more says so. */
-export const PULL_REQUESTS_PAGE_SIZE = 50;
+export const PULL_REQUESTS_PAGE_SIZE = 100;
+
+/** Rows shown at once; the loaded list is paged in the browser. */
+export const PULL_REQUESTS_PER_PAGE = 8;
 
 type Segment = 'open' | 'merged' | 'closed' | 'all';
 
@@ -76,6 +80,7 @@ export default function PullRequestsPanel({
         SEGMENTS,
     );
     const [expanded, setExpanded] = useState<number | null>(null);
+    const [page, setPage] = useState(1);
     const [linking, setLinking] = useState<DevelopmentPullRequest | null>(null);
 
     const counts = useMemo(
@@ -89,7 +94,17 @@ export default function PullRequestsPanel({
             ) as Record<Segment, number>,
         [pullRequests],
     );
-    const visible = (pullRequests ?? []).filter((pr) => matches(pr, segment));
+    const filtered = (pullRequests ?? []).filter((pr) => matches(pr, segment));
+    // A reload can shrink the list under the page being shown.
+    const lastPage = Math.max(
+        1,
+        Math.ceil(filtered.length / PULL_REQUESTS_PER_PAGE),
+    );
+    const current = Math.min(page, lastPage);
+    const visible = filtered.slice(
+        (current - 1) * PULL_REQUESTS_PER_PAGE,
+        current * PULL_REQUESTS_PER_PAGE,
+    );
     // The open row is found again by number, so it follows its pull request
     // when a reload reorders the list; the modal likewise sees fresh issues.
     const linkingNow =
@@ -117,6 +132,7 @@ export default function PullRequestsPanel({
                     onChange={(next) => {
                         setSegment(next);
                         setExpanded(null);
+                        setPage(1);
                     }}
                     options={SEGMENTS.map((key) => ({
                         value: key,
@@ -219,6 +235,19 @@ export default function PullRequestsPanel({
                     ))
                 )}
             </div>
+
+            {pullRequests && (
+                <ListPager
+                    label={t('pull_requests_panel.pager')}
+                    page={current}
+                    pageSize={PULL_REQUESTS_PER_PAGE}
+                    total={filtered.length}
+                    onPageChange={(next) => {
+                        setPage(next);
+                        setExpanded(null);
+                    }}
+                />
+            )}
 
             {pullRequests && pullRequests.length >= PULL_REQUESTS_PAGE_SIZE && (
                 <a

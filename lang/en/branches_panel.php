@@ -8,6 +8,6 @@ return [
     'retry' => 'Try again',
     'loading' => 'Loading branches',
     'empty' => 'This repository has no branches.',
-    'show_more' => 'Show :count more',
-    'show_less' => 'Show fewer',
+    'pager' => 'Branches pages',
+    'pager' => 'Branches pages',
 ];
