@@ -1,5 +1,6 @@
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
+import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import {
     DevelopmentInsights,
@@ -27,6 +28,13 @@ export default function DevelopmentStats({
 }: DevelopmentStatsProps) {
     const { t, tChoice } = useLaravelReactI18n();
     const dash = '—';
+    // A figure whose data is on its way is a skeleton, never a stale or made-up number.
+    const pending = (index: number) => (
+        <Skeleton
+            index={index}
+            className="inline-block h-5 w-10 align-middle"
+        />
+    );
 
     const open = pullRequests?.filter((pr) => pr.state === 'open') ?? [];
     const weekAgo = Date.now() - WEEK_MS;
@@ -46,7 +54,7 @@ export default function DevelopmentStats({
         {
             key: 'open',
             title: t('development_stats.open'),
-            value: pullRequests ? String(open.length) : dash,
+            value: pullRequests ? String(open.length) : pending(0),
             icon: 'GitPullRequest' as const,
             color: 'success' as const,
             description: tChoice('development_stats.open_hint', needReview, {
@@ -56,7 +64,7 @@ export default function DevelopmentStats({
         {
             key: 'merged',
             title: t('development_stats.merged'),
-            value: pullRequests ? String(mergedThisWeek) : dash,
+            value: pullRequests ? String(mergedThisWeek) : pending(1),
             icon: 'GitMerge' as const,
             color: 'accent' as const,
             description: t('development_stats.merged_hint'),
@@ -64,7 +72,11 @@ export default function DevelopmentStats({
         {
             key: 'checks',
             title: t('development_stats.checks'),
-            value: passRate === null ? dash : `${passRate}%`,
+            value: !pullRequests
+                ? pending(2)
+                : passRate === null
+                  ? dash
+                  : `${passRate}%`,
             icon: 'CircleCheck' as const,
             color:
                 passRate === null || passRate >= 80
@@ -78,7 +90,7 @@ export default function DevelopmentStats({
         {
             key: 'commits',
             title: t('development_stats.commits'),
-            value: commits === null ? dash : String(commits),
+            value: commits === null ? pending(3) : String(commits),
             icon: 'GitCommitHorizontal' as const,
             color: 'info' as const,
             description: t('development_stats.commits_hint', {
@@ -88,7 +100,7 @@ export default function DevelopmentStats({
         {
             key: 'contributors',
             title: t('development_stats.contributors'),
-            value: insights ? String(insights.contributors.length) : dash,
+            value: insights ? String(insights.contributors.length) : pending(4),
             icon: 'Users' as const,
             color: 'warning' as const,
             description: t('development_stats.contributors_hint'),
@@ -96,7 +108,10 @@ export default function DevelopmentStats({
     ];
 
     return (
-        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-5">
+        <ul
+            aria-busy={!pullRequests || !insights}
+            className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-5"
+        >
             {cards.map(({ key, ...card }, index) => (
                 <li key={key} className="min-w-0">
                     <RowReveal index={index} fill>

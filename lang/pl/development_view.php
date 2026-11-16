@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'loading_repository' => 'Wczytywanie repozytorium',
     'repository' => 'Repozytorium',
     'private' => 'Prywatne',
     'public' => 'Publiczne',

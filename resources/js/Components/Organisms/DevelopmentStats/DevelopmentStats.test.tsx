@@ -7,10 +7,12 @@ const card = (title: string) =>
     screen.getByText(title).closest('div')!.parentElement!.parentElement!;
 
 describe('DevelopmentStats', () => {
-    test('shows dashes until the data is there', () => {
+    test('shows skeletons, not numbers, until the data is there', () => {
         render(<DevelopmentStats pullRequests={null} insights={null} />);
 
-        expect(screen.getAllByText('—')).toHaveLength(5);
+        expect(screen.getAllByTestId('skeleton')).toHaveLength(5);
+        expect(screen.queryByText('—')).not.toBeInTheDocument();
+        expect(screen.getByRole('list')).toHaveAttribute('aria-busy', 'true');
     });
 
     test('counts open pull requests and those waiting for a review', () => {

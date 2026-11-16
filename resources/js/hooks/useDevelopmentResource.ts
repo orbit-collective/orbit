@@ -45,26 +45,33 @@ export function useDevelopmentResource<T>(
     params: Record<string, string | number | undefined> | null,
     fallbackError: string,
 ): DevelopmentResource<T> {
-    const [data, setData] = useState<T | null>(null);
-    const [loading, setLoading] = useState(params !== null);
-    const [error, setError] = useState<string | null>(null);
+    // What arrived is remembered with the request it answers. A reload of the
+    // same request keeps showing it while the next answer is on its way; a
+    // different request (another repository) never shows the old answer, not
+    // even for the render before its own effect runs.
+    const [result, setResult] = useState<{
+        key: string;
+        data: T | null;
+        error: string | null;
+    } | null>(null);
+    const [fetching, setFetching] = useState(params !== null);
     const [reloads, setReloads] = useState(0);
     const fallback = useRef(fallbackError);
     fallback.current = fallbackError;
 
     const paramsKey = params === null ? null : JSON.stringify(params);
+    const requestKey = paramsKey === null ? null : `${url}?${paramsKey}`;
+    const current = result && result.key === requestKey ? result : null;
 
     useEffect(() => {
-        if (paramsKey === null) {
-            setData(null);
-            setError(null);
-            setLoading(false);
+        if (paramsKey === null || requestKey === null) {
+            setResult(null);
+            setFetching(false);
             return;
         }
 
         const controller = new AbortController();
-        setLoading(true);
-        setError(null);
+        setFetching(true);
 
         axios
             .get<T>(url, {
@@ -73,20 +80,34 @@ export function useDevelopmentResource<T>(
             })
             .then((response) => {
                 if (controller.signal.aborted) return;
-                setData(response.data);
+                setResult({
+                    key: requestKey,
+                    data: response.data,
+                    error: null,
+                });
             })
             .catch((failure) => {
                 if (controller.signal.aborted || axios.isCancel?.(failure)) {
                     return;
                 }
-                setError(requestErrorMessage(failure, fallback.current));
+                setResult((previous) => ({
+                    key: requestKey,
+                    // A failed reload keeps what was shown.
+                    data: previous?.key === requestKey ? previous.data : null,
+                    error: requestErrorMessage(failure, fallback.current),
+                }));
             })
             .finally(() => {
-                if (!controller.signal.aborted) setLoading(false);
+                if (!controller.signal.aborted) setFetching(false);
             });
 
         return () => controller.abort();
-    }, [url, paramsKey, reloads]);
+    }, [url, paramsKey, requestKey, reloads]);
+
+    const data = current?.data ?? null;
+    const error = current?.error ?? null;
+    // Not ready for this request yet (its effect has not run) also counts as loading.
+    const loading = paramsKey !== null && (fetching || current === null);
 
     const reload = useCallback(() => setReloads((count) => count + 1), []);
 

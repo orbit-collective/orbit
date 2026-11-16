@@ -70,6 +70,19 @@ beforeEach(() => {
     vi.mocked(axios.isCancel).mockReturnValue(false);
 });
 
+const renderViewWithTwo = () =>
+    render(
+        <DevelopmentView
+            project={project}
+            development={buildOverview({
+                repositories: [
+                    { id: 1, owner: 'orbit-collective', name: 'orbit' },
+                    { id: 2, owner: 'orbit-collective', name: 'orbit-api' },
+                ],
+            })}
+        />,
+    );
+
 const renderView = (overview = buildOverview()) =>
     render(<DevelopmentView project={project} development={overview} />);
 
@@ -314,5 +327,38 @@ describe('DevelopmentView', () => {
         expect(
             screen.getByRole('link', { name: 'Open on GitHub' }),
         ).toHaveAttribute('href', 'https://github.com/orbit-collective/orbit');
+    });
+
+    test('switching repository shows skeletons instead of the previous repository data', async () => {
+        const pending = new Promise(() => {});
+        renderViewWithTwo();
+        await screen.findByText('Add login redirect');
+
+        vi.mocked(axios.get).mockImplementation(((url: string) =>
+            url.includes('pull-requests.index') || url.includes('insights.show')
+                ? pending
+                : answers()(url)) as never);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: /Repository/ }),
+        );
+        await userEvent.click(
+            await screen.findByText('orbit-collective/orbit-api'),
+        );
+
+        await waitFor(() =>
+            expect(
+                screen.queryByText('Add login redirect'),
+            ).not.toBeInTheDocument(),
+        );
+        expect(
+            screen.getByRole('status', { name: 'Loading pull requests' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('status', {
+                name: 'Loading repository statistics',
+            }),
+        ).toBeInTheDocument();
+        expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(5);
     });
 });
