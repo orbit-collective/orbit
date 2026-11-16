@@ -11,14 +11,29 @@ use App\Models\Project;
  */
 class GithubCommentFormatter
 {
-    public function format(Issue $issue, Project $project): string
+    /**
+     * @param  non-empty-list<Issue>  $issues  every issue the pull request was linked to
+     */
+    public function format(array $issues, Project $project): string
     {
-        $title = $issue->title;
+        if (count($issues) === 1) {
+            [$issue] = $issues;
+
+            return <<<MARKDOWN
+            Synced with Orbit
+
+            This pull request is linked to **#$issue->number — $issue->title** in **$project->name**.
+            MARKDOWN;
+        }
+
+        $list = implode("\n", array_map(fn (Issue $issue) => "- **#$issue->number — $issue->title**", $issues));
 
         return <<<MARKDOWN
         Synced with Orbit
 
-        This pull request is linked to **#$issue->number — $title** in **$project->name**.
+        This pull request is linked to these issues in **$project->name**:
+
+        $list
         MARKDOWN;
     }
 }

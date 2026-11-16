@@ -26,7 +26,7 @@ use Throwable;
  * PollGithubRelayEvents, which only acks after this returns without
  * throwing (ack-last, see the MVP spec's "ACK order" section). A thrown
  * exception (network/API/DB failure) means the caller must leave the event
- * pending for the next poll tick; every other outcome (no marker, ambiguous,
+ * pending for the next poll tick; every other outcome (no marker,
  * issue not found/wrong project, unsupported event, unlinked lifecycle
  * event, stale lifecycle event) is a permanent, safely-ackable Skipped.
  */
@@ -62,24 +62,26 @@ class GithubRelayEventProcessor
 
     private function handleOpened(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
     {
-        $marker = $this->markerParser->parse($event->pullRequestBody);
+        $issueIds = $this->markerParser->parse($event->pullRequestBody);
 
-        if ($marker->isAmbiguous()) {
-            Log::warning('Ignoring a GitHub pull request with more than one orbit-issue marker', [
-                'projectIntegrationId' => $projectIntegration->id,
-                'pullRequestNumber' => $event->pullRequestNumber,
-            ]);
-
+        if ($issueIds === []) {
             return GithubRelayEventOutcome::Skipped;
         }
 
-        if ($marker->isNone()) {
-            return GithubRelayEventOutcome::Skipped;
+        // Several markers link the pull request to several issues. An id
+        // that does not resolve to an issue of this project is dropped on
+        // its own; the pull request is skipped only when none resolves.
+        $issues = [];
+
+        foreach ($issueIds as $issueId) {
+            $issue = $this->issueResolver->resolve($issueId, $projectIntegration->project_id);
+
+            if ($issue) {
+                $issues[] = $issue;
+            }
         }
 
-        $issue = $this->issueResolver->resolve($marker->issueId, $projectIntegration->project_id);
-
-        if (! $issue) {
+        if ($issues === []) {
             return GithubRelayEventOutcome::Skipped;
         }
 
@@ -94,10 +96,34 @@ class GithubRelayEventProcessor
             return GithubRelayEventOutcome::Skipped;
         }
 
-        // Idempotent by (project_integration_id, external_id) - reprocessing
-        // the same event (e.g. after a comment-request failure) updates
-        // this row in place rather than creating a duplicate link.
-        $existingLink = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
+        foreach ($issues as $issue) {
+            $this->linkIssue($issue, $event, $projectIntegration, $repository);
+        }
+
+        // orbit-api itself dedupes comment creation by eventId, so
+        // reprocessing an already-commented event is a no-op there too.
+        $this->relayClient->createComment(
+            $projectIntegration->github_relay_token,
+            $event->id,
+            $event->pullRequestNumber,
+            $this->commentFormatter->format($issues, $issues[0]->project),
+        );
+
+        foreach ($issues as $issue) {
+            $this->fireTrigger(AutomationTriggerType::GithubPullRequestOpened, $issue, $projectIntegration, $event, $repository);
+        }
+
+        return GithubRelayEventOutcome::Linked;
+    }
+
+    /**
+     * Idempotent by (project_integration_id, external_id, issue_id) -
+     * reprocessing the same event (e.g. after a comment-request failure)
+     * updates this row in place rather than creating a duplicate link.
+     */
+    private function linkIssue(Issue $issue, GithubRelayEventDTO $event, ProjectIntegration $projectIntegration, GithubRepository $repository): void
+    {
+        $existingLink = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId, $issue->id);
 
         $attributes = [
             'issue_id' => $issue->id,
@@ -120,19 +146,6 @@ class GithubRelayEventProcessor
         }
 
         $this->externalIssueLinkRepository->upsertFor($projectIntegration, (string) $event->pullRequestId, $attributes);
-
-        // orbit-api itself dedupes comment creation by eventId, so
-        // reprocessing an already-commented event is a no-op there too.
-        $this->relayClient->createComment(
-            $projectIntegration->github_relay_token,
-            $event->id,
-            $event->pullRequestNumber,
-            $this->commentFormatter->format($issue, $issue->project),
-        );
-
-        $this->fireTrigger(AutomationTriggerType::GithubPullRequestOpened, $issue, $projectIntegration, $event, $repository);
-
-        return GithubRelayEventOutcome::Linked;
     }
 
     /**
@@ -145,9 +158,9 @@ class GithubRelayEventProcessor
      */
     private function handleLifecycleEvent(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
     {
-        $link = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
+        $links = $this->externalIssueLinkRepository->getFor($projectIntegration, (string) $event->pullRequestId);
 
-        if (! $link) {
+        if ($links->isEmpty()) {
             return GithubRelayEventOutcome::Skipped;
         }
 
@@ -160,36 +173,43 @@ class GithubRelayEventProcessor
             return GithubRelayEventOutcome::Skipped;
         }
 
-        if (! $this->isApplicable($link, $event)) {
-            Log::info('Ignoring a stale or duplicate GitHub pull request lifecycle event', [
-                'projectIntegrationId' => $projectIntegration->id,
-                'pullRequestId' => $event->pullRequestId,
-                'action' => $event->action,
-            ]);
-
-            return GithubRelayEventOutcome::Skipped;
-        }
-
-        // status/github_updated_at/merged_at are filtered to non-null
-        // alongside the metadata fields: resolveStatus() returns null for
-        // `synchronize` (status is deliberately left unchanged - see the
-        // MVP spec's "synchronize" behavior), and a lifecycle event that
-        // omits a timestamp must never blank out one already stored, or the
-        // stale-event guard above would stop protecting this link.
-        $this->externalIssueLinkRepository->touch($link, array_filter([
-            'status' => $this->resolveStatus($event),
-            'github_updated_at' => $event->pullRequestUpdatedAt,
-            'merged_at' => $event->pullRequestMergedAt,
-            ...$this->nonNullMetadata($event),
-        ], fn ($value) => $value !== null) + ['last_synced_at' => now()]);
-
         $trigger = $this->resolveLifecycleTrigger($event);
+        $synced = false;
 
-        if ($trigger && $link->issue) {
-            $this->fireTrigger($trigger, $link->issue, $projectIntegration, $event, $repository);
+        // Every issue the pull request is linked to follows its lifecycle;
+        // staleness is judged per link, since each keeps its own timestamp.
+        foreach ($links as $link) {
+            if (! $this->isApplicable($link, $event)) {
+                Log::info('Ignoring a stale or duplicate GitHub pull request lifecycle event', [
+                    'projectIntegrationId' => $projectIntegration->id,
+                    'pullRequestId' => $event->pullRequestId,
+                    'action' => $event->action,
+                ]);
+
+                continue;
+            }
+
+            // status/github_updated_at/merged_at are filtered to non-null
+            // alongside the metadata fields: resolveStatus() returns null for
+            // `synchronize` (status is deliberately left unchanged - see the
+            // MVP spec's "synchronize" behavior), and a lifecycle event that
+            // omits a timestamp must never blank out one already stored, or the
+            // stale-event guard above would stop protecting this link.
+            $this->externalIssueLinkRepository->touch($link, array_filter([
+                'status' => $this->resolveStatus($event),
+                'github_updated_at' => $event->pullRequestUpdatedAt,
+                'merged_at' => $event->pullRequestMergedAt,
+                ...$this->nonNullMetadata($event),
+            ], fn ($value) => $value !== null) + ['last_synced_at' => now()]);
+
+            if ($trigger && $link->issue) {
+                $this->fireTrigger($trigger, $link->issue, $projectIntegration, $event, $repository);
+            }
+
+            $synced = true;
         }
 
-        return GithubRelayEventOutcome::Synced;
+        return $synced ? GithubRelayEventOutcome::Synced : GithubRelayEventOutcome::Skipped;
     }
 
     private function resolveLifecycleTrigger(GithubRelayEventDTO $event): ?AutomationTriggerType
@@ -256,9 +276,9 @@ class GithubRelayEventProcessor
      */
     private function handleCheckSuite(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
     {
-        $link = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
+        $links = $this->externalIssueLinkRepository->getFor($projectIntegration, (string) $event->pullRequestId);
 
-        if (! $link) {
+        if ($links->isEmpty()) {
             return GithubRelayEventOutcome::Skipped;
         }
 
@@ -272,10 +292,12 @@ class GithubRelayEventProcessor
             return GithubRelayEventOutcome::Skipped;
         }
 
-        $this->externalIssueLinkRepository->touch($link, [
-            'check_status' => $event->checkStatus,
-            'last_synced_at' => now(),
-        ]);
+        foreach ($links as $link) {
+            $this->externalIssueLinkRepository->touch($link, [
+                'check_status' => $event->checkStatus,
+                'last_synced_at' => now(),
+            ]);
+        }
 
         return GithubRelayEventOutcome::Synced;
     }
@@ -287,9 +309,9 @@ class GithubRelayEventProcessor
      */
     private function handleReviewSubmitted(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
     {
-        $link = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
+        $links = $this->externalIssueLinkRepository->getFor($projectIntegration, (string) $event->pullRequestId);
 
-        if (! $link) {
+        if ($links->isEmpty()) {
             return GithubRelayEventOutcome::Skipped;
         }
 
@@ -303,19 +325,23 @@ class GithubRelayEventProcessor
             return GithubRelayEventOutcome::Skipped;
         }
 
-        $currentPrecedence = self::REVIEW_STATE_PRECEDENCE[$link->review_status] ?? 0;
         $incomingPrecedence = self::REVIEW_STATE_PRECEDENCE[$event->reviewState] ?? 0;
+        $synced = false;
 
-        if ($incomingPrecedence < $currentPrecedence) {
-            return GithubRelayEventOutcome::Skipped;
+        foreach ($links as $link) {
+            if ($incomingPrecedence < (self::REVIEW_STATE_PRECEDENCE[$link->review_status] ?? 0)) {
+                continue;
+            }
+
+            $this->externalIssueLinkRepository->touch($link, [
+                'review_status' => $event->reviewState,
+                'last_synced_at' => now(),
+            ]);
+
+            $synced = true;
         }
 
-        $this->externalIssueLinkRepository->touch($link, [
-            'review_status' => $event->reviewState,
-            'last_synced_at' => now(),
-        ]);
-
-        return GithubRelayEventOutcome::Synced;
+        return $synced ? GithubRelayEventOutcome::Synced : GithubRelayEventOutcome::Skipped;
     }
 
     private function resolveStatus(GithubRelayEventDTO $event): ?string
