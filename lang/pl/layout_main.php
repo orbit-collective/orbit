@@ -13,7 +13,7 @@ return [
         'board' => 'Widok tablicy',
         'calendar' => 'Widok kalendarza',
         'activity' => 'Widok aktywności',
-        'development' => 'Widok developmentu',
+        'development' => 'Widok rozwoju',
     ],
     'view_keyword' => 'widok',
     'search_issues' => [
@@ -27,6 +27,6 @@ return [
         'board' => 'Tablica',
         'calendar' => 'Kalendarz',
         'activity' => 'Dziennik aktywności',
-        'development' => 'Development',
+        'development' => 'Rozwój',
     ],
 ];
