@@ -311,20 +311,22 @@ class SettingsController extends Controller
         $isGithub = $integration === 'github';
         $isJira = $integration === 'jira';
         $settings = $hasIntegrationsAccess
-            ? $this->mapIntegrationSettings(
-                $this->projectIntegrationService->getSettings($selectedProject),
-                $canUpdateIntegrations,
-            )[$integration] ?? null
+            ? $this->projectIntegrationService->getIntegrationSettings($selectedProject, $integration)
+            : null;
+        // GitHub's state comes from one read of the connect status, so the
+        // enabled flag and the status in the same response cannot disagree
+        // (reading it syncs a pending installation from the relay).
+        $githubStatus = $isGithub && $hasIntegrationsAccess
+            ? $this->githubIntegrationService->getConnectStatus($selectedProject)
             : null;
 
         return Inertia::render('Settings/IntegrationDetail', [
             ...$this->projectScope($projects, $selectedProject),
             'integrationId' => $integration,
-            'integrationEnabled' => $hasIntegrationsAccess
-                && ($isGithub
-                    ? $this->githubIntegrationService->isConnected($selectedProject)
-                    : ($settings['enabled'] ?? false)),
-            'integrationSettings' => $settings,
+            'integrationEnabled' => $isGithub
+                ? ($githubStatus['status'] ?? null) === 'connected'
+                : (bool) ($settings['enabled'] ?? false),
+            'integrationSettings' => $settings === null ? null : $this->mapIntegrationSettings([$integration => $settings], $canUpdateIntegrations)[$integration],
             'hasIntegrationsAccess' => $hasIntegrationsAccess,
             'canUpdateIntegrations' => $canUpdateIntegrations,
             'jiraSettings' => $isJira && $canUpdateIntegrations
@@ -339,9 +341,7 @@ class SettingsController extends Controller
                 : null,
             // Gated on view access (not update) since a read-only viewer is
             // still allowed to see which repository is connected.
-            'githubConnectStatus' => $isGithub && $hasIntegrationsAccess
-                ? $this->githubIntegrationService->getConnectStatus($selectedProject)
-                : null,
+            'githubConnectStatus' => $githubStatus,
             // Only the import mapping UI reads these, and that is gated on
             // being able to change the integration in the first place.
             'issueTypes' => $isJira && $canUpdateIntegrations

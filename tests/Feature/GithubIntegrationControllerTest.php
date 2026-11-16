@@ -306,3 +306,42 @@ test('the integrations overview loads when the stored relay token cannot be decr
     $this->actingAs($this->admin)->get("/settings/integrations?project={$this->project->id}")
         ->assertOk();
 });
+
+test('the github page does not read another integration\'s unreadable webhook url', function () {
+    $discord = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'discord',
+        'enabled' => true,
+        'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
+    ]);
+
+    DB::table('project_integrations')->where('id', $discord->id)->update([
+        'webhook_url' => 'not-a-valid-encrypted-payload',
+    ]);
+
+    $this->actingAs($this->admin)->get("/settings/integrations/github?project={$this->project->id}")->assertOk();
+    $this->actingAs($this->admin)->get("/settings/integrations/jira?project={$this->project->id}")->assertOk();
+    $this->actingAs($this->admin)->get("/settings/integrations?project={$this->project->id}")->assertOk();
+});
+
+test('the github page reports one consistent state when a pending installation has finished', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_connection_id' => 'conn_1',
+        'github_relay_token' => 'orb_local_secret',
+        'github_install_url' => 'https://github.com/apps/orbit/installations/new?state=xyz',
+        'github_status' => 'pending',
+    ]);
+
+    Http::fake(['*/v1/github/connections/me' => Http::response([
+        'success' => true,
+        'data' => ['id' => 'conn_1', 'status' => 'connected', 'installationId' => 163077216, 'repositories' => [['id' => 1274545725, 'owner' => 'orbit-collective', 'name' => 'orbit']], 'createdAt' => 'now', 'connectedAt' => '2026-09-20T00:00:00Z', 'revokedAt' => null],
+    ], 200)]);
+
+    $this->actingAs($this->admin)->get("/settings/integrations/github?project={$this->project->id}")
+        ->assertInertia(fn ($page) => $page
+            ->where('githubConnectStatus.status', 'connected')
+            ->where('integrationEnabled', true));
+});

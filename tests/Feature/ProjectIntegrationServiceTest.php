@@ -135,3 +135,25 @@ test('the catalog ids cover the wired up integrations and github', function () {
     expect(ProjectIntegrationService::CATALOG_INTEGRATIONS)
         ->toContain('github', ...ProjectIntegrationService::AVAILABLE_INTEGRATIONS);
 });
+
+test('getIntegrationSettings reads one integration and is null for one that is not available', function () {
+    $project = Project::factory()->create();
+
+    expect($this->service->getIntegrationSettings($project, 'discord'))->toBe([
+        'enabled' => false,
+        'webhookUrl' => null,
+        'options' => ['issue-activity' => false, 'comment-activity' => false],
+    ])->and($this->service->getIntegrationSettings($project, 'slack'))->toBeNull()
+        ->and($this->service->getIntegrationSettings($project, 'github'))->toBeNull();
+});
+
+test('getStatuses never reads the encrypted webhook url', function () {
+    $project = Project::factory()->create();
+    $record = $this->service->setEnabled($project, 'discord', true);
+
+    DB::table('project_integrations')->where('id', $record->id)->update([
+        'webhook_url' => 'not-a-valid-encrypted-payload',
+    ]);
+
+    expect($this->service->getStatuses($project)['discord'])->toBeTrue();
+});

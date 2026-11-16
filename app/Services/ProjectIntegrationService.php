@@ -58,14 +58,20 @@ class ProjectIntegrationService
 
     /**
      * @return array<string, bool> enabled state keyed by integration id, for every
-     *                              currently available integration.
+     *                              currently available integration. Reads only the
+     *                              enabled flag, never the encrypted webhook URL, so
+     *                              an unreadable credential cannot break the overview.
      */
     public function getStatuses(Project $project): array
     {
-        return array_map(
-            fn (array $settings) => $settings['enabled'],
-            $this->getSettings($project),
-        );
+        $statuses = [];
+
+        foreach (self::AVAILABLE_INTEGRATIONS as $integration) {
+            $statuses[$integration] = $this->projectIntegrationRepository
+                ->findForProject($project, $integration)?->enabled ?? false;
+        }
+
+        return $statuses;
     }
 
     /**
@@ -76,19 +82,34 @@ class ProjectIntegrationService
         $settings = [];
 
         foreach (self::AVAILABLE_INTEGRATIONS as $integration) {
-            $record = $this->projectIntegrationRepository->findForProject($project, $integration);
-
-            $settings[$integration] = [
-                'enabled' => $record?->enabled ?? false,
-                'webhookUrl' => $record?->webhook_url,
-                'options' => array_merge(
-                    array_fill_keys(self::AVAILABLE_OPTIONS[$integration] ?? [], false),
-                    $record?->options ?? [],
-                ),
-            ];
+            $settings[$integration] = $this->getIntegrationSettings($project, $integration);
         }
 
         return $settings;
+    }
+
+    /**
+     * One integration's settings, reading only its own record: the webhook
+     * URL of another integration (encrypted at rest) is never touched.
+     *
+     * @return array{enabled: bool, webhookUrl: ?string, options: array<string, bool>}|null null for an integration that is not available
+     */
+    public function getIntegrationSettings(Project $project, string $integration): ?array
+    {
+        if (! in_array($integration, self::AVAILABLE_INTEGRATIONS, true)) {
+            return null;
+        }
+
+        $record = $this->projectIntegrationRepository->findForProject($project, $integration);
+
+        return [
+            'enabled' => $record?->enabled ?? false,
+            'webhookUrl' => $record?->webhook_url,
+            'options' => array_merge(
+                array_fill_keys(self::AVAILABLE_OPTIONS[$integration] ?? [], false),
+                $record?->options ?? [],
+            ),
+        ];
     }
 
     public function setEnabled(Project $project, string $integration, bool $enabled): ProjectIntegration
