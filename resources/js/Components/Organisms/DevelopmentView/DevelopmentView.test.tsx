@@ -4,6 +4,7 @@ import axios from 'axios';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
     buildBranch,
+    buildCi,
     buildCommit,
     buildInsights,
     buildOverview,
@@ -11,6 +12,11 @@ import {
     buildPullRequestDetail,
 } from '@/tests/development';
 import { Project } from '@/types/Projects';
+import {
+    DEFAULT_SETTINGS,
+    SETTINGS_STORAGE_KEY,
+    sinceFor,
+} from '@/utils/developmentSettings';
 import DevelopmentView from './DevelopmentView';
 
 vi.mock('axios');
@@ -30,12 +36,18 @@ const project = { id: 3, name: 'Orbit' } as Project;
 
 const answers =
     (overrides: Record<string, unknown> = {}) =>
-    (url: string) => {
+    (url: string, config?: { params?: { refs?: string[] } }) => {
         const table: Record<string, unknown> = {
             'pull-requests.index': {
                 pullRequests: [
-                    buildPullRequest({ title: 'Add login redirect' }),
+                    buildPullRequest({ title: 'Add login redirect', ci: null }),
                 ],
+                hasMore: false,
+            },
+            'checks.batch': {
+                checks: Object.fromEntries(
+                    (config?.params?.refs ?? []).map((sha) => [sha, buildCi()]),
+                ),
             },
             'pull-requests.show': buildPullRequestDetail(),
             'insights.show': buildInsights(),
@@ -48,6 +60,7 @@ const answers =
                         protected: false,
                     }),
                 ],
+                total: 2,
             },
             'commits.index': { commits: [buildCommit()] },
             ...overrides,
@@ -126,24 +139,119 @@ describe('DevelopmentView', () => {
         expect(axios.get).toHaveBeenCalledWith(
             '/projects.development.pull-requests.index/3',
             expect.objectContaining({
-                params: { repository_id: 1, state: 'all', per_page: 100 },
+                params: {
+                    repository_id: 1,
+                    state: 'all',
+                    since: sinceFor(DEFAULT_SETTINGS.range),
+                    page: 1,
+                    per_page: 100,
+                },
             }),
         );
         expect(axios.get).toHaveBeenCalledWith(
             '/projects.development.branches.index/3',
             expect.objectContaining({
-                params: { repository_id: 1, page: 1, per_page: 6 },
+                params: { repository_id: 1, page: 1, per_page: 5 },
             }),
         );
-        // The commits are those of the default branch, asked once the repository is known.
+        // The commits are of the default branch without waiting to be told which it is.
+        expect(axios.get).toHaveBeenCalledWith(
+            '/projects.development.commits.index/3',
+            expect.objectContaining({
+                params: { repository_id: 1, per_page: 8 },
+            }),
+        );
+    });
+
+    test('reads the checks apart from the list, in one call for the open pull requests on screen', async () => {
+        renderView();
+
+        expect(await screen.findByText('Checks passed')).toBeInTheDocument();
+
+        const checkCalls = vi
+            .mocked(axios.get)
+            .mock.calls.filter(([url]) => String(url).includes('checks.batch'));
+        expect(checkCalls).toHaveLength(1);
+        expect(checkCalls[0][1]).toEqual(
+            expect.objectContaining({
+                params: { repository_id: 1, refs: ['abc1234def'] },
+            }),
+        );
+        const listCall = vi
+            .mocked(axios.get)
+            .mock.calls.find(([url]) =>
+                String(url).includes('pull-requests.index'),
+            );
+        expect(JSON.stringify(listCall)).not.toContain('ci');
+    });
+
+    test('hiding a section stops it being read from GitHub, not just drawn', async () => {
+        localStorage.setItem(
+            SETTINGS_STORAGE_KEY,
+            JSON.stringify({
+                sections: {
+                    stats: false,
+                    insights: false,
+                    branches: false,
+                    commits: false,
+                },
+            }),
+        );
+        renderView();
+
+        expect(
+            await screen.findByText('Add login redirect'),
+        ).toBeInTheDocument();
+
+        const urls = vi
+            .mocked(axios.get)
+            .mock.calls.map(([url]) => String(url));
+        expect(urls.some((url) => url.includes('insights.show'))).toBe(false);
+        expect(urls.some((url) => url.includes('branches.index'))).toBe(false);
+        expect(urls.some((url) => url.includes('commits.index'))).toBe(false);
+        expect(screen.queryByText('Commit activity')).not.toBeInTheDocument();
+        expect(
+            screen.queryByText('Open pull requests'),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText('Latest commits')).not.toBeInTheDocument();
+    });
+
+    test('customizing: a shorter time range reads the pull requests again from that date', async () => {
+        renderView();
+        await screen.findByText('Add login redirect');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Customize the view' }),
+        );
+        const dialog = screen.getByRole('dialog', {
+            name: 'Customize the development view',
+        });
+        await userEvent.click(
+            within(dialog).getByRole('button', { name: '30 days' }),
+        );
+
         await waitFor(() =>
             expect(axios.get).toHaveBeenCalledWith(
-                '/projects.development.commits.index/3',
+                '/projects.development.pull-requests.index/3',
                 expect.objectContaining({
-                    params: { repository_id: 1, branch: 'master', per_page: 8 },
+                    params: expect.objectContaining({ since: sinceFor('30d') }),
                 }),
             ),
         );
+        expect(
+            JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY)!).range,
+        ).toBe('30d');
+        expect(
+            screen.getAllByText('Updated in the last 30 days').length,
+        ).toBeGreaterThan(1);
+
+        await userEvent.click(
+            within(dialog).getByRole('button', { name: 'Reset to defaults' }),
+        );
+        await userEvent.click(
+            within(dialog).getByRole('button', { name: 'Done' }),
+        );
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     test('shows a private repository as private', async () => {

@@ -15,6 +15,8 @@ interface DevelopmentStatsProps {
     /** `null` while the list is on its way. */
     pullRequests: DevelopmentPullRequest[] | null;
     insights: DevelopmentInsights | null;
+    /** The checks of open pull requests are still arriving: the pass rate waits for them. */
+    ciPending?: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ interface DevelopmentStatsProps {
 export default function DevelopmentStats({
     pullRequests,
     insights,
+    ciPending = false,
 }: DevelopmentStatsProps) {
     const { t, tChoice } = useLaravelReactI18n();
     const dash = '—';
@@ -75,7 +78,9 @@ export default function DevelopmentStats({
             value: !pullRequests
                 ? pending(2)
                 : passRate === null
-                  ? dash
+                  ? ciPending
+                      ? pending(2)
+                      : dash
                   : `${passRate}%`,
             icon: 'CircleCheck' as const,
             color:

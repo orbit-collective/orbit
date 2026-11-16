@@ -8,6 +8,4 @@ return [
     'retry' => 'Try again',
     'loading' => 'Loading branches',
     'empty' => 'This repository has no branches.',
-    'pager' => 'Branches pages',
-    'pager' => 'Branches pages',
 ];

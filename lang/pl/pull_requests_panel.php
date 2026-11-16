@@ -17,9 +17,9 @@ return [
         'closed' => 'Brak zamkniętych pull requestów.',
         'all' => 'To repozytorium nie ma jeszcze pull requestów.',
     ],
-    'pager' => 'Strony pull requestów',
-    'pager' => 'Strony pull requestów',
+    'loading_more' => 'Wczytywanie starszych pull requestów…',
+    'capped' => 'Pokazano :count najnowszych z tego przedziału.',
+    'more' => 'Zobacz wszystkie na GitHubie',
     'retry' => 'Spróbuj ponownie',
     'loading' => 'Wczytywanie pull requestów',
-    'more' => 'Pokazano :count ostatnio zaktualizowanych. Resztę zobaczysz na GitHubie',
 ];

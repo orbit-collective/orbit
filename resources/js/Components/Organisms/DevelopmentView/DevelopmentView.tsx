@@ -9,33 +9,33 @@ import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatusPill from '@/Components/Atoms/StatusPill/StatusPill';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
-import BranchesPanel, {
-    BRANCHES_PAGE_SIZE,
-} from '@/Components/Organisms/BranchesPanel/BranchesPanel';
+import BranchesPanel from '@/Components/Organisms/BranchesPanel/BranchesPanel';
 import CommitsPanel from '@/Components/Organisms/CommitsPanel/CommitsPanel';
 import CreateBranchModal from '@/Components/Organisms/CreateBranchModal/CreateBranchModal';
 import DevelopmentEmptyState from '@/Components/Organisms/DevelopmentEmptyState/DevelopmentEmptyState';
+import DevelopmentSettingsModal from '@/Components/Organisms/DevelopmentSettingsModal/DevelopmentSettingsModal';
 import DevelopmentStats from '@/Components/Organisms/DevelopmentStats/DevelopmentStats';
-import PullRequestsPanel, {
-    PULL_REQUESTS_PAGE_SIZE,
-} from '@/Components/Organisms/PullRequestsPanel/PullRequestsPanel';
+import PullRequestsPanel from '@/Components/Organisms/PullRequestsPanel/PullRequestsPanel';
 import RepositoryInsights from '@/Components/Organisms/RepositoryInsights/RepositoryInsights';
+import { useCiSummaries } from '@/hooks/useCiSummaries';
 import { useDevelopmentActions } from '@/hooks/useDevelopmentActions';
 import { useDevelopmentResource } from '@/hooks/useDevelopmentResource';
+import { useDevelopmentSettings } from '@/hooks/useDevelopmentSettings';
+import { usePullRequestWindow } from '@/hooks/usePullRequestWindow';
 import { useStoredChoice } from '@/hooks/useStoredChoice';
 import {
     DevelopmentBranch,
     DevelopmentCommit,
     DevelopmentInsights,
     DevelopmentOverview,
-    DevelopmentPullRequest,
 } from '@/types/Development';
 import { Project } from '@/types/Projects';
 import { repositoryLabel } from '@/utils/development';
+import { PAGE_SIZES, sinceFor } from '@/utils/developmentSettings';
 import { staggerParent } from '@/utils/motion';
 
-/** Commits shown beside the pull requests. */
-const COMMITS_SHOWN = 8;
+/** The most open pull requests whose checks are read for the pass-rate statistic. */
+const CI_STATS_SAMPLE = 20;
 
 interface DevelopmentViewProps {
     project: Project;
@@ -100,22 +100,29 @@ function DevelopmentBoard({
     const [creatingBranch, setCreatingBranch] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
+    const { settings, update, reset } = useDevelopmentSettings();
+    const [customizing, setCustomizing] = useState(false);
+    const { sections } = settings;
+    // The header pills, the numbers and the charts all read the repository's statistics.
+    const needInsights = sections.stats || sections.insights;
+    const since = useMemo(() => sinceFor(settings.range), [settings.range]);
+
     const route_ = (name: string) =>
         route(`projects.development.${name}`, { project: project.id });
-    const pullRequests = useDevelopmentResource<{
-        pullRequests: DevelopmentPullRequest[];
-    }>(
+    // The first page of the range shows at once, older ones arrive behind it.
+    const pullRequests = usePullRequestWindow(
         route_('pull-requests.index'),
         {
             repository_id: repository.id,
             state: 'all',
-            per_page: PULL_REQUESTS_PAGE_SIZE,
+            since,
+            limit: settings.pullRequestLimit,
         },
         t('development_view.pull_requests_failed'),
     );
     const insights = useDevelopmentResource<DevelopmentInsights>(
         route_('insights.show'),
-        { repository_id: repository.id },
+        needInsights ? { repository_id: repository.id } : null,
         t('development_view.insights_failed'),
     );
     // The branches page belongs to a repository: another one starts at page 1.
@@ -127,38 +134,80 @@ function DevelopmentBoard({
         total: number;
     }>(
         route_('branches.index'),
-        {
-            repository_id: repository.id,
-            page: branchesPage,
-            per_page: BRANCHES_PAGE_SIZE,
-        },
+        sections.branches
+            ? {
+                  repository_id: repository.id,
+                  page: branchesPage,
+                  per_page: settings.branchesPerPage,
+              }
+            : null,
         t('development_view.branches_failed'),
     );
     const defaultBranch = insights.data?.repository.defaultBranch ?? null;
+    // No branch is the default branch: the list does not wait for the statistics to say which.
     const commits = useDevelopmentResource<{ commits: DevelopmentCommit[] }>(
         route_('commits.index'),
-        // Waits for the default branch so the list is of that branch, not of "whatever".
-        insights.data
+        sections.commits
             ? {
                   repository_id: repository.id,
-                  branch: defaultBranch ?? undefined,
-                  per_page: COMMITS_SHOWN,
+                  per_page: settings.commitsShown,
               }
             : null,
         t('development_view.commits_failed'),
+    );
+
+    // The checks are read apart from the list (they are the slow part) and
+    // only for what is on screen, plus a sample of the open ones for the
+    // pass rate; paging to a page already seen costs nothing.
+    const [visibleShas, setVisibleShas] = useState<string[]>([]);
+    const loadedPullRequests = pullRequests.pullRequests;
+    const ciShas = useMemo(
+        () => [
+            ...visibleShas,
+            ...(sections.stats
+                ? (loadedPullRequests ?? [])
+                      .filter((pr) => pr.state === 'open')
+                      .slice(0, CI_STATS_SAMPLE)
+                      .map((pr) => pr.headSha)
+                : []),
+        ],
+        [visibleShas, sections.stats, loadedPullRequests],
+    );
+    const ci = useCiSummaries(
+        route_('checks.batch'),
+        repository.id,
+        ciShas,
+        loadedPullRequests !== null,
+    );
+    const pullRequestsWithCi = useMemo(
+        () =>
+            loadedPullRequests?.map((pr) =>
+                pr.headSha in ci.summaries
+                    ? { ...pr, ci: ci.summaries[pr.headSha] }
+                    : pr,
+            ) ?? null,
+        [loadedPullRequests, ci.summaries],
     );
 
     const { reload: reloadPullRequests } = pullRequests;
     const { reload: reloadInsights } = insights;
     const { reload: reloadBranches } = branches;
     const { reload: reloadCommits } = commits;
+    const { reload: reloadCi } = ci;
     const reloadAll = useCallback(() => {
         reloadPullRequests();
         reloadInsights();
         reloadBranches();
         reloadCommits();
+        reloadCi();
         setVersion((current) => current + 1);
-    }, [reloadPullRequests, reloadInsights, reloadBranches, reloadCommits]);
+    }, [
+        reloadPullRequests,
+        reloadInsights,
+        reloadBranches,
+        reloadCommits,
+        reloadCi,
+    ]);
 
     const actions = useDevelopmentActions(project.id, repository.id, reloadAll);
 
@@ -184,9 +233,11 @@ function DevelopmentBoard({
     );
     const loading =
         pullRequests.loading ||
+        pullRequests.loadingMore ||
         insights.loading ||
         branches.loading ||
         refreshing;
+    const showSide = sections.insights || sections.branches || sections.commits;
     const canCreateBranch = abilities.createBranch && githubLinked;
 
     return (
@@ -220,7 +271,7 @@ function DevelopmentBoard({
                             {repositoryLabel(repository)}
                         </h3>
                     )}
-                    {!insights.data ? (
+                    {!needInsights ? null : !insights.data ? (
                         <div
                             role="status"
                             aria-label={t(
@@ -278,6 +329,14 @@ function DevelopmentBoard({
                         {t('development_view.open_on_github')}
                     </a>
                     <IconButton
+                        iconName="SlidersHorizontal"
+                        iconSize={16}
+                        onClick={() => setCustomizing(true)}
+                        ariaLabel={t('development_view.customize')}
+                        title={t('development_view.customize')}
+                        className="outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)"
+                    />
+                    <IconButton
                         iconName="RefreshCw"
                         iconSize={16}
                         onClick={refresh}
@@ -299,22 +358,46 @@ function DevelopmentBoard({
                 </div>
             </Reveal>
 
-            <Reveal>
-                <DevelopmentStats
-                    pullRequests={pullRequests.data?.pullRequests ?? null}
-                    insights={insights.data}
-                />
-            </Reveal>
+            {sections.stats && (
+                <Reveal>
+                    <DevelopmentStats
+                        pullRequests={pullRequestsWithCi}
+                        insights={insights.data}
+                        ciPending={ci.pending.size > 0}
+                    />
+                </Reveal>
+            )}
 
-            <div className="grid min-h-0 gap-4 xl:grid-cols-3">
-                <Reveal className="min-w-0 xl:col-span-2">
+            <div
+                className={
+                    showSide
+                        ? 'grid min-h-0 gap-4 xl:grid-cols-3'
+                        : 'grid min-h-0 gap-4'
+                }
+            >
+                <Reveal
+                    className={showSide ? 'min-w-0 xl:col-span-2' : 'min-w-0'}
+                >
                     <PullRequestsPanel
                         key={repository.id}
                         projectId={project.id}
                         repositoryId={repository.id}
                         repositoryUrl={repositoryUrl}
-                        pullRequests={pullRequests.data?.pullRequests ?? null}
+                        pullRequests={pullRequestsWithCi}
                         loading={pullRequests.loading}
+                        loadingMore={pullRequests.loadingMore}
+                        capped={pullRequests.capped}
+                        limit={settings.pullRequestLimit}
+                        rangeLabel={t(
+                            `development_settings_modal.ranges.${settings.range}`,
+                        )}
+                        perPage={settings.pullRequestsPerPage}
+                        perPageOptions={[...PAGE_SIZES]}
+                        onPerPageChange={(size) =>
+                            update({ pullRequestsPerPage: size })
+                        }
+                        ciPending={ci.pending}
+                        onVisibleShas={setVisibleShas}
                         error={pullRequests.error}
                         onRetry={pullRequests.reload}
                         abilities={abilities}
@@ -326,32 +409,64 @@ function DevelopmentBoard({
                         onUnlinkIssue={actions.unlinkIssue}
                     />
                 </Reveal>
-                <Reveal className="flex min-w-0 flex-col gap-4">
-                    <RepositoryInsights insights={insights.data} />
-                    <BranchesPanel
-                        branches={branches.data?.branches ?? null}
-                        total={branches.data?.total ?? 0}
-                        page={branchesPage}
-                        onPageChange={(page) =>
-                            setBranchesAt({ repository: repository.id, page })
-                        }
-                        error={branches.error}
-                        onRetry={branches.reload}
-                        onCreate={
-                            canCreateBranch
-                                ? () => setCreatingBranch(true)
-                                : undefined
-                        }
-                    />
-                    <CommitsPanel
-                        commits={commits.data?.commits ?? null}
-                        branch={defaultBranch}
-                        repositoryUrl={repositoryUrl}
-                        error={commits.error}
-                        onRetry={commits.reload}
-                    />
-                </Reveal>
+                {showSide && (
+                    <Reveal className="flex min-w-0 flex-col gap-4">
+                        {sections.insights && (
+                            <RepositoryInsights
+                                insights={insights.data}
+                                weeks={settings.activityWeeks}
+                            />
+                        )}
+                        {sections.branches && (
+                            <BranchesPanel
+                                branches={branches.data?.branches ?? null}
+                                total={branches.data?.total ?? 0}
+                                page={branchesPage}
+                                onPageChange={(page) =>
+                                    setBranchesAt({
+                                        repository: repository.id,
+                                        page,
+                                    })
+                                }
+                                perPage={settings.branchesPerPage}
+                                perPageOptions={[...PAGE_SIZES]}
+                                onPerPageChange={(size) => {
+                                    update({ branchesPerPage: size });
+                                    setBranchesAt({
+                                        repository: repository.id,
+                                        page: 1,
+                                    });
+                                }}
+                                error={branches.error}
+                                onRetry={branches.reload}
+                                onCreate={
+                                    canCreateBranch
+                                        ? () => setCreatingBranch(true)
+                                        : undefined
+                                }
+                            />
+                        )}
+                        {sections.commits && (
+                            <CommitsPanel
+                                commits={commits.data?.commits ?? null}
+                                branch={defaultBranch}
+                                repositoryUrl={repositoryUrl}
+                                error={commits.error}
+                                onRetry={commits.reload}
+                            />
+                        )}
+                    </Reveal>
+                )}
             </div>
+
+            {customizing && (
+                <DevelopmentSettingsModal
+                    settings={settings}
+                    onChange={update}
+                    onReset={reset}
+                    onClose={() => setCustomizing(false)}
+                />
+            )}
 
             {creatingBranch && (
                 <CreateBranchModal

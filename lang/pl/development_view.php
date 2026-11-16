@@ -8,6 +8,7 @@ return [
     'private' => 'Prywatne',
     'public' => 'Publiczne',
     'open_on_github' => 'Otwórz na GitHubie',
+    'customize' => 'Dostosuj widok',
     'refresh' => 'Odśwież',
     'new_branch' => 'Nowa gałąź',
     'pull_requests_failed' => 'Nie udało się wczytać pull requestów z GitHuba.',

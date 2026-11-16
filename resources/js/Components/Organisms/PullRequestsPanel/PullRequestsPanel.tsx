@@ -1,11 +1,11 @@
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SegmentedControl from '@/Components/Atoms/SegmentedControl/SegmentedControl';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
-import ListPager from '@/Components/Molecules/ListPager/ListPager';
+import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import PullRequestDetail from '@/Components/Molecules/PullRequestDetail/PullRequestDetail';
 import PullRequestRow from '@/Components/Molecules/PullRequestRow/PullRequestRow';
 import LinkIssueModal from '@/Components/Organisms/LinkIssueModal/LinkIssueModal';
@@ -16,12 +16,6 @@ import {
 } from '@/types/Development';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
-
-/** The list is read in one page of this size; a repository with more says so. */
-export const PULL_REQUESTS_PAGE_SIZE = 100;
-
-/** Rows shown at once; the loaded list is paged in the browser. */
-export const PULL_REQUESTS_PER_PAGE = 8;
 
 type Segment = 'open' | 'merged' | 'closed' | 'all';
 
@@ -34,6 +28,22 @@ interface PullRequestsPanelProps {
     /** `null` until the first answer. */
     pullRequests: DevelopmentPullRequest[] | null;
     loading: boolean;
+    /** Later pages of the range are still being read behind the ones shown. */
+    loadingMore?: boolean;
+    /** The range holds more than the limit allows, so what is shown is the newest of it. */
+    capped?: boolean;
+    /** How many were read at most, for the note when capped. */
+    limit?: number;
+    /** The time range in words ("Last 90 days"), shown under the title. */
+    rangeLabel?: string;
+    /** Rows per page, and what to do when the person picks another. */
+    perPage: number;
+    onPerPageChange: (perPage: number) => void;
+    perPageOptions: number[];
+    /** Shas of open pull requests whose checks have not arrived yet. */
+    ciPending?: Set<string>;
+    /** The open pull requests on the page being shown: the ones whose checks are worth reading now. */
+    onVisibleShas?: (shas: string[]) => void;
     error: string | null;
     onRetry: () => void;
     abilities: DevelopmentOverview['abilities'];
@@ -62,6 +72,15 @@ export default function PullRequestsPanel({
     repositoryUrl,
     pullRequests,
     loading,
+    loadingMore = false,
+    capped = false,
+    limit,
+    rangeLabel,
+    perPage,
+    onPerPageChange,
+    perPageOptions,
+    ciPending,
+    onVisibleShas,
     error,
     onRetry,
     abilities,
@@ -96,15 +115,18 @@ export default function PullRequestsPanel({
     );
     const filtered = (pullRequests ?? []).filter((pr) => matches(pr, segment));
     // A reload can shrink the list under the page being shown.
-    const lastPage = Math.max(
-        1,
-        Math.ceil(filtered.length / PULL_REQUESTS_PER_PAGE),
-    );
+    const lastPage = Math.max(1, Math.ceil(filtered.length / perPage));
     const current = Math.min(page, lastPage);
-    const visible = filtered.slice(
-        (current - 1) * PULL_REQUESTS_PER_PAGE,
-        current * PULL_REQUESTS_PER_PAGE,
-    );
+    const visible = filtered.slice((current - 1) * perPage, current * perPage);
+    const visibleShas = visible
+        .filter((pr) => pr.state === 'open')
+        .map((pr) => pr.headSha)
+        .join(',');
+
+    // Tells the view which checks are worth reading: the ones on screen.
+    useEffect(() => {
+        onVisibleShas?.(visibleShas === '' ? [] : visibleShas.split(','));
+    }, [visibleShas, onVisibleShas]);
     // The open row is found again by number, so it follows its pull request
     // when a reload reorders the list; the modal likewise sees fresh issues.
     const linkingNow =
@@ -124,6 +146,7 @@ export default function PullRequestsPanel({
                     <CardHeader
                         icon="GitPullRequest"
                         title={t('pull_requests_panel.title')}
+                        description={rangeLabel}
                     />
                 </div>
                 <SegmentedControl<Segment>
@@ -202,6 +225,10 @@ export default function PullRequestsPanel({
                             <PullRequestRow
                                 projectId={projectId}
                                 pullRequest={pullRequest}
+                                ciPending={
+                                    pullRequest.state === 'open' &&
+                                    ciPending?.has(pullRequest.headSha)
+                                }
                                 expanded={expanded === pullRequest.number}
                                 onToggle={() =>
                                     setExpanded((current) =>
@@ -237,34 +264,57 @@ export default function PullRequestsPanel({
             </div>
 
             {pullRequests && (
-                <ListPager
-                    label={t('pull_requests_panel.pager')}
-                    page={current}
-                    pageSize={PULL_REQUESTS_PER_PAGE}
+                <Pagination
+                    variant="compact"
                     total={filtered.length}
+                    page={current}
+                    perPage={perPage}
+                    perPageOptions={perPageOptions}
                     onPageChange={(next) => {
                         setPage(next);
+                        setExpanded(null);
+                    }}
+                    onPerPageChange={(size) => {
+                        onPerPageChange(size);
+                        setPage(1);
                         setExpanded(null);
                     }}
                 />
             )}
 
-            {pullRequests && pullRequests.length >= PULL_REQUESTS_PAGE_SIZE && (
-                <a
-                    href={`${repositoryUrl}/pulls`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(
-                        'mt-3 inline-flex items-center gap-1 rounded-sm text-xs text-(--accent-color) hover:underline',
-                        FOCUS_RING,
-                    )}
-                >
-                    {t('pull_requests_panel.more', {
-                        count: PULL_REQUESTS_PAGE_SIZE,
-                    })}
-                    <Icon name="ExternalLink" size={12} />
-                </a>
-            )}
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-(--text-muted-color)">
+                {loadingMore && (
+                    <span role="status" className="flex items-center gap-1.5">
+                        <Icon
+                            name="LoaderCircle"
+                            size={12}
+                            className="animate-spin motion-reduce:animate-none"
+                        />
+                        {t('pull_requests_panel.loading_more')}
+                    </span>
+                )}
+                {capped && (
+                    <span>
+                        {t('pull_requests_panel.capped', {
+                            count: limit ?? pullRequests?.length ?? 0,
+                        })}
+                    </span>
+                )}
+                {pullRequests && (capped || pullRequests.length === 0) && (
+                    <a
+                        href={`${repositoryUrl}/pulls`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={cn(
+                            'inline-flex items-center gap-1 rounded-sm text-(--accent-color) hover:underline',
+                            FOCUS_RING,
+                        )}
+                    >
+                        {t('pull_requests_panel.more')}
+                        <Icon name="ExternalLink" size={12} />
+                    </a>
+                )}
+            </div>
 
             {linkingNow && (
                 <LinkIssueModal

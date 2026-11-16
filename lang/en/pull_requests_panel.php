@@ -17,9 +17,9 @@ return [
         'closed' => 'No closed pull requests.',
         'all' => 'No pull requests in this repository yet.',
     ],
-    'pager' => 'Pull requests pages',
-    'pager' => 'Pull requests pages',
+    'loading_more' => 'Reading older pull requests…',
+    'capped' => 'Showing the newest :count of this range.',
+    'more' => 'See all on GitHub',
     'retry' => 'Try again',
     'loading' => 'Loading pull requests',
-    'more' => 'Showing the :count most recently updated. See the rest on GitHub',
 ];
