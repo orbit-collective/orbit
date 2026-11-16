@@ -23,7 +23,7 @@ use Illuminate\Validation\ValidationException;
  */
 class GithubDevelopmentController extends Controller
 {
-    private const int MAX_PER_PAGE = 50;
+    private const int MAX_PER_PAGE = 100;
 
     public function __construct(
         protected GithubDevelopmentService $developmentService,
@@ -97,9 +97,13 @@ class GithubDevelopmentController extends Controller
     {
         $this->authorize('viewGithubDevelopment', $project);
 
-        $data = $request->validate(['repository_id' => 'required|integer|min:1']);
+        $data = $request->validate([
+            'repository_id' => 'required|integer|min:1',
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:'.self::MAX_PER_PAGE,
+        ]);
 
-        return response()->json(['branches' => $this->developmentService->branches($project, $data['repository_id'])]);
+        return response()->json($this->developmentService->branches($project, $data['repository_id'], $data['page'] ?? 1, $data['per_page'] ?? 10));
     }
 
     public function checks(Request $request, Project $project): JsonResponse

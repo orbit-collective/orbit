@@ -317,3 +317,21 @@ test('refreshing drops the cached reads', function () {
 
     $this->actingAs(User::factory()->create())->postJson("$this->base/refresh")->assertForbidden();
 });
+
+test('branches are read a page at a time and the page is part of the cache key', function () {
+    Http::fake(['*/v1/github/branches*' => fn ($request) => relayOk([
+        'branches' => [['name' => 'page-'.($request['page'])]],
+        'total' => 20,
+        'page' => (int) $request['page'],
+        'perPage' => 6,
+    ])]);
+
+    $this->actingAs($this->member)->getJson("$this->base/branches$this->query&page=2&per_page=6")
+        ->assertOk()->assertJsonPath('branches.0.name', 'page-2')->assertJsonPath('total', 20);
+    $this->actingAs($this->member)->getJson("$this->base/branches$this->query&page=3&per_page=6")
+        ->assertJsonPath('branches.0.name', 'page-3');
+    $this->actingAs($this->member)->getJson("$this->base/branches$this->query&page=3&per_page=6")->assertOk();
+
+    Http::assertSentCount(2);
+    $this->actingAs($this->member)->getJson("$this->base/branches$this->query&per_page=500")->assertJsonValidationErrors('per_page');
+});
