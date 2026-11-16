@@ -205,6 +205,32 @@ class GithubDevelopmentController extends Controller
         return response()->json(['state' => $data['state']]);
     }
 
+    public function mergePullRequest(Request $request, Project $project, int $number): JsonResponse
+    {
+        $this->authorize('manageGithubDevelopment', $project);
+        $this->assertGithubAccountLinked($request);
+
+        $data = $request->validate([
+            'repository_id' => 'required|integer|min:1',
+            'method' => ['required', Rule::in(['merge', 'squash', 'rebase'])],
+            'commit_title' => 'sometimes|nullable|string|max:256',
+            'commit_message' => 'sometimes|nullable|string|max:65536',
+            'head_sha' => ['sometimes', 'nullable', 'string', 'regex:/^[0-9a-fA-F]{7,40}$/'],
+        ]);
+
+        $this->developmentService->mergePullRequest(
+            $project,
+            $data['repository_id'],
+            $number,
+            $data['method'],
+            $data['commit_title'] ?? null,
+            $data['commit_message'] ?? null,
+            $data['head_sha'] ?? null,
+        );
+
+        return response()->json(['merged' => true]);
+    }
+
     public function linkIssue(Request $request, Project $project, int $number): JsonResponse
     {
         $this->authorize('manageGithubDevelopment', $project);

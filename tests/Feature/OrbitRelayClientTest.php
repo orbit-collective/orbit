@@ -356,3 +356,13 @@ test('listIssues treats a missing hasMore as no more', function () {
     expect($this->client->listIssues('tok', 5, 'all', 1, 10)['hasMore'])->toBeFalse();
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'since='));
 });
+
+test('mergePullRequest sends the method and only the options it was given', function () {
+    Http::fake(['*/v1/github/pull-request-merge' => Http::response(['success' => true, 'data' => ['merged' => true, 'sha' => 'abc', 'message' => 'merged']])]);
+
+    expect($this->client->mergePullRequest('tok', 5, 7, 'squash', 'Add login (#7)', null, 'abc1234'))->toBe(['merged' => true, 'sha' => 'abc', 'message' => 'merged']);
+    $this->client->mergePullRequest('tok', 5, 7, 'rebase');
+
+    Http::assertSent(fn ($request) => $request->data() === ['repositoryId' => 5, 'number' => 7, 'method' => 'squash', 'commitTitle' => 'Add login (#7)', 'expectedHeadSha' => 'abc1234']);
+    Http::assertSent(fn ($request) => $request->data() === ['repositoryId' => 5, 'number' => 7, 'method' => 'rebase']);
+});

@@ -198,6 +198,24 @@ class GithubDevelopmentService
     }
 
     /**
+     * Merges a pull request with the chosen method. Like closing, it leaves
+     * the links alone: the `closed` webhook (merged) updates them and fires
+     * the automations listening for a merge.
+     *
+     * @param  'merge'|'squash'|'rebase'  $method
+     */
+    public function mergePullRequest(Project $project, int $repositoryId, int $number, string $method, ?string $commitTitle = null, ?string $commitMessage = null, ?string $expectedHeadSha = null): void
+    {
+        [, $token, $repository] = $this->context($project, $repositoryId);
+
+        $this->call(fn () => $this->relayClient->mergePullRequest($token, $repositoryId, $number, $method, $commitTitle, $commitMessage, $expectedHeadSha));
+
+        $this->activityLogService->log($project->id, "Merged pull request $repository->owner/$repository->name#$number ($method)");
+
+        $this->forget($project);
+    }
+
+    /**
      * Links an issue to a pull request: the pull request's description gets
      * the issue's marker (so GitHub-side the link is as visible as one made
      * by hand) and the link row is written straight away, since no

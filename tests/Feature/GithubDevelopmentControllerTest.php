@@ -441,3 +441,55 @@ test('the GitHub issues list validates its query and needs the view permission',
     $this->actingAs($this->member)->getJson("$this->base/github-issues")->assertJsonValidationErrors('repository_id');
     $this->actingAs(User::factory()->create())->getJson("$this->base/github-issues$this->query")->assertForbidden();
 });
+
+test('merging a pull request passes the method, the commit details and the head the person saw', function () {
+    Http::fake(['*/v1/github/pull-request-merge' => relayOk(['merged' => true, 'sha' => 'abc', 'message' => 'merged'])]);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/merge", [
+        'repository_id' => DEV_REPO_ID,
+        'method' => 'squash',
+        'commit_title' => 'Add login (#7)',
+        'commit_message' => 'Body',
+        'head_sha' => 'abc1234',
+    ])->assertOk()->assertJsonPath('merged', true);
+
+    Http::assertSent(fn ($request) => str_ends_with($request->url(), '/pull-request-merge')
+        && $request->data() === ['repositoryId' => DEV_REPO_ID, 'number' => 7, 'method' => 'squash', 'commitTitle' => 'Add login (#7)', 'commitMessage' => 'Body', 'expectedHeadSha' => 'abc1234']);
+});
+
+test('merging leaves the links alone so the webhook can update them and fire the automations', function () {
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id, 'project_integration_id' => $this->integration->id,
+        'external_id' => '4580098240', 'external_key' => 'orbit-collective/orbit#7', 'external_type' => 'github_pull_request', 'status' => 'open',
+    ]);
+    Http::fake(['*/v1/github/pull-request-merge' => relayOk(['merged' => true, 'sha' => 'abc', 'message' => 'merged'])]);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/merge", ['repository_id' => DEV_REPO_ID, 'method' => 'merge'])->assertOk();
+
+    expect(ExternalIssueLink::query()->value('status'))->toBe('open');
+});
+
+test('merging needs manage permission, a linked GitHub account and a valid method', function () {
+    Http::fake();
+    $url = "$this->base/pull-requests/7/merge";
+    $viewer = User::factory()->create(['github_id' => '2']);
+    addProjectMember($this->project, $viewer->id, 'viewer');
+    $unlinked = User::factory()->create(['github_id' => null]);
+    addProjectMember($this->project, $unlinked->id, 'member');
+
+    $this->actingAs($viewer)->postJson($url, ['repository_id' => DEV_REPO_ID, 'method' => 'merge'])->assertForbidden();
+    $this->actingAs($unlinked)->postJson($url, ['repository_id' => DEV_REPO_ID, 'method' => 'merge'])->assertJsonValidationErrors('development');
+    $this->actingAs($this->member)->postJson($url, ['repository_id' => DEV_REPO_ID, 'method' => 'fast-forward'])->assertJsonValidationErrors('method');
+    $this->actingAs($this->member)->postJson($url, ['repository_id' => DEV_REPO_ID, 'method' => 'merge', 'head_sha' => 'not a sha'])->assertJsonValidationErrors('head_sha');
+
+    Http::assertNothingSent();
+});
+
+test('a merge GitHub refuses comes back as a message the browser can show', function () {
+    Http::fake(['*/v1/github/pull-request-merge' => Http::response(['success' => false, 'error' => ['code' => 'GITHUB_PULL_REQUEST_REJECTED', 'message' => 'Required status check is failing']], 422)]);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/merge", ['repository_id' => DEV_REPO_ID, 'method' => 'merge'])
+        ->assertStatus(422)
+        ->assertJsonPath('errors.development.0', 'Required status check is failing');
+});

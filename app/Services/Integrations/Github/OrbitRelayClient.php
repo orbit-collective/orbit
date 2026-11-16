@@ -328,6 +328,30 @@ class OrbitRelayClient
         return ['issues' => $data['issues'], 'hasMore' => $data['hasMore'] ?? false];
     }
 
+    /**
+     * Merges a pull request. orbit-api passes GitHub's own reason through when
+     * it will not (a failing required check, a conflict, a method the
+     * repository does not allow); `$expectedHeadSha` makes it refuse when the
+     * branch moved since the person looked.
+     *
+     * @param  'merge'|'squash'|'rebase'  $method
+     * @return array{merged: bool, sha: string, message: string}
+     */
+    public function mergePullRequest(string $relayToken, int $repositoryId, int $number, string $method, ?string $commitTitle = null, ?string $commitMessage = null, ?string $expectedHeadSha = null): array
+    {
+        return $this->request(
+            fn () => $this->authenticatedClient($relayToken)->post('/v1/github/pull-request-merge', array_filter([
+                'repositoryId' => $repositoryId,
+                'number' => $number,
+                'method' => $method,
+                'commitTitle' => $commitTitle,
+                'commitMessage' => $commitMessage,
+                'expectedHeadSha' => $expectedHeadSha,
+            ], fn ($value) => $value !== null)),
+            'POST /v1/github/pull-request-merge',
+        );
+    }
+
     /** @return list<array<string, mixed>> */
     public function listCommits(string $relayToken, int $repositoryId, ?string $branch, int $page, int $perPage): array
     {
