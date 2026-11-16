@@ -283,3 +283,25 @@ test('a created branch drops the cached branch list', function () {
     $this->actingAs($this->member)->postJson("$this->base/branches", ['repository_id' => DEV_REPO_ID, 'name' => 'feat/x'])->assertCreated();
     $this->actingAs($this->member)->getJson("$this->base/branches$this->query")->assertJsonPath('branches.0.name', 'feat/x');
 });
+
+test('the issue picker finds this projects issues by title or number', function () {
+    $match = Issue::factory()->create(['project_id' => $this->project->id, 'title' => 'Fix the login redirect']);
+    Issue::factory()->create(['project_id' => $this->project->id, 'title' => 'Unrelated']);
+    Issue::factory()->create(['project_id' => Project::factory()->create()->id, 'title' => 'Fix login elsewhere']);
+
+    $this->actingAs($this->member)->getJson("$this->base/issues?q=LOGIN")
+        ->assertOk()
+        ->assertJsonCount(1, 'issues')
+        ->assertJsonPath('issues.0', ['id' => $match->id, 'number' => $match->number, 'title' => 'Fix the login redirect']);
+
+    $this->actingAs($this->member)->getJson("$this->base/issues?q=%23$match->number")
+        ->assertJsonPath('issues.0.id', $match->id);
+});
+
+test('the issue picker needs manage permission and a query', function () {
+    $viewer = User::factory()->create();
+    addProjectMember($this->project, $viewer->id, 'viewer');
+
+    $this->actingAs($viewer)->getJson("$this->base/issues?q=a")->assertForbidden();
+    $this->actingAs($this->member)->getJson("$this->base/issues")->assertJsonValidationErrors('q');
+});

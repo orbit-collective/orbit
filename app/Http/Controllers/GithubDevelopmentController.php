@@ -112,6 +112,15 @@ class GithubDevelopmentController extends Controller
         return response()->json($this->developmentService->insights($project, $data['repository_id']));
     }
 
+    public function searchIssues(Request $request, Project $project): JsonResponse
+    {
+        $this->authorize('manageGithubDevelopment', $project);
+
+        $data = $request->validate(['q' => 'required|string|min:1|max:100']);
+
+        return response()->json(['issues' => $this->developmentService->searchIssues($project, $data['q'])]);
+    }
+
     public function createBranch(Request $request, Project $project): JsonResponse
     {
         $this->authorize('createGithubDevelopment', $project);
