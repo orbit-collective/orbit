@@ -423,3 +423,21 @@ test('linking an issue that is already linked does not comment again', function 
 
     Http::assertNotSent(fn ($request) => str_ends_with($request->url(), '/pull-request-comment'));
 });
+
+test('lists the GitHub issues of a repository, cached, bounded by a date', function () {
+    Http::fake(['*/v1/github/issues*' => relayOk(['issues' => [['id' => 1, 'number' => 12, 'title' => 'Fix login']], 'hasMore' => false])]);
+
+    $url = "$this->base/github-issues$this->query&state=open&since=2026-08-01&per_page=100";
+    $this->actingAs($this->member)->getJson($url)->assertOk()->assertJsonPath('issues.0.number', 12)->assertJsonPath('hasMore', false);
+    $this->actingAs($this->member)->getJson($url)->assertOk();
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'since=2026-08-01') && str_contains($request->url(), 'perPage=100'));
+});
+
+test('the GitHub issues list validates its query and needs the view permission', function () {
+    $this->actingAs($this->member)->getJson("$this->base/github-issues$this->query&state=merged")->assertJsonValidationErrors('state');
+    $this->actingAs($this->member)->getJson("$this->base/github-issues$this->query&since=yesterday")->assertJsonValidationErrors('since');
+    $this->actingAs($this->member)->getJson("$this->base/github-issues")->assertJsonValidationErrors('repository_id');
+    $this->actingAs(User::factory()->create())->getJson("$this->base/github-issues$this->query")->assertForbidden();
+});

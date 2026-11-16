@@ -58,6 +58,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pull-requests/{number}/state', [GithubDevelopmentController::class, 'setPullRequestState'])->whereNumber('number')->name('pull-requests.state');
         Route::post('/pull-requests/{number}/issues', [GithubDevelopmentController::class, 'linkIssue'])->whereNumber('number')->name('pull-requests.issues.store');
         Route::delete('/pull-requests/{number}/issues/{issue}', [GithubDevelopmentController::class, 'unlinkIssue'])->whereNumber(['number', 'issue'])->name('pull-requests.issues.destroy');
+        Route::get('/github-issues', [GithubDevelopmentController::class, 'githubIssues'])->name('github-issues.index');
         Route::get('/commits', [GithubDevelopmentController::class, 'commits'])->name('commits.index');
         Route::get('/branches', [GithubDevelopmentController::class, 'branches'])->name('branches.index');
         Route::post('/branches', [GithubDevelopmentController::class, 'createBranch'])->name('branches.store');

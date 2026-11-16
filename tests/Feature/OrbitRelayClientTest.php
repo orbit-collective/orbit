@@ -342,3 +342,17 @@ test('commentOnPullRequest posts the text for a pull request of a repository', f
     expect($this->client->commentOnPullRequest('tok', 5, 7, 'Synced'))->toBe(['id' => 9, 'url' => 'https://github.com/o/r/pull/7#c9']);
     Http::assertSent(fn ($request) => $request->data() === ['repositoryId' => 5, 'number' => 7, 'body' => 'Synced'] && $request->hasHeader('Authorization', 'Bearer tok'));
 });
+
+test('listIssues sends the state, the page and the date, and reports hasMore', function () {
+    Http::fake(['*/v1/github/issues*' => Http::response(['success' => true, 'data' => ['issues' => [['number' => 1]], 'hasMore' => true]])]);
+
+    expect($this->client->listIssues('tok', 5, 'open', 2, 30, '2026-08-01'))->toBe(['issues' => [['number' => 1]], 'hasMore' => true]);
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'state=open') && str_contains($request->url(), 'page=2') && str_contains($request->url(), 'since=2026-08-01'));
+});
+
+test('listIssues treats a missing hasMore as no more', function () {
+    Http::fake(['*/v1/github/issues*' => Http::response(['success' => true, 'data' => ['issues' => []]])]);
+
+    expect($this->client->listIssues('tok', 5, 'all', 1, 10)['hasMore'])->toBeFalse();
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'since='));
+});

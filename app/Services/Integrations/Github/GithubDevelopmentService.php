@@ -38,6 +38,8 @@ class GithubDevelopmentService
 
     private const int TTL_CHECKS = 30;
 
+    private const int TTL_ISSUES = 60;
+
     private const int TTL_COMMITS = 60;
 
     private const int TTL_BRANCHES = 120;
@@ -121,6 +123,19 @@ class GithubDevelopmentService
         sort($refs);
 
         return $this->remember($project, "checks-batch:$repositoryId:".md5(implode(',', $refs)), self::TTL_CHECKS, fn () => $this->relayClient->getChecksBatch($token, $repositoryId, $refs));
+    }
+
+    /**
+     * One page of the repository's GitHub issues, for starting a branch from
+     * one. `$since` bounds them by last update like the pull requests.
+     *
+     * @return array{issues: list<array<string, mixed>>, hasMore: bool}
+     */
+    public function githubIssues(Project $project, int $repositoryId, string $state, int $page, int $perPage, ?string $since = null): array
+    {
+        [, $token] = $this->context($project, $repositoryId);
+
+        return $this->remember($project, "gh-issues:$repositoryId:$state:$page:$perPage:$since", self::TTL_ISSUES, fn () => $this->relayClient->listIssues($token, $repositoryId, $state, $page, $perPage, $since));
     }
 
     /** @return array<string, mixed> */
