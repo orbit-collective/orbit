@@ -26,6 +26,7 @@ import { useDevelopmentResource } from '@/hooks/useDevelopmentResource';
 import { useDevelopmentSettings } from '@/hooks/useDevelopmentSettings';
 import { usePullRequestWindow } from '@/hooks/usePullRequestWindow';
 import { useStoredChoice } from '@/hooks/useStoredChoice';
+import { useDevelopmentLive } from '@/live/useDevelopmentLive';
 import {
     DevelopmentBranch,
     DevelopmentCommit,
@@ -250,6 +251,14 @@ function DevelopmentBoard({
         reloadAll();
         setRefreshing(false);
     };
+
+    // Other people's changes (and GitHub's own events) reload the view; with
+    // no socket it polls, and a slow sweep covers what is never announced.
+    useDevelopmentLive(project.id, {
+        onChange: reloadAll,
+        onPoll: reloadAll,
+        onSafetyRefresh: () => void refresh(),
+    });
 
     const repositoryOptions = useMemo(
         () =>
