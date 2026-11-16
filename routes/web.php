@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pull-requests', [GithubDevelopmentController::class, 'pullRequests'])->name('pull-requests.index');
         Route::get('/pull-requests/{number}', [GithubDevelopmentController::class, 'pullRequest'])->whereNumber('number')->name('pull-requests.show');
         Route::post('/pull-requests/{number}/state', [GithubDevelopmentController::class, 'setPullRequestState'])->whereNumber('number')->name('pull-requests.state');
+        Route::post('/pull-requests/{number}/merge', [GithubDevelopmentController::class, 'mergePullRequest'])->whereNumber('number')->name('pull-requests.merge');
         Route::post('/pull-requests/{number}/issues', [GithubDevelopmentController::class, 'linkIssue'])->whereNumber('number')->name('pull-requests.issues.store');
         Route::delete('/pull-requests/{number}/issues/{issue}', [GithubDevelopmentController::class, 'unlinkIssue'])->whereNumber(['number', 'issue'])->name('pull-requests.issues.destroy');
         Route::get('/github-issues', [GithubDevelopmentController::class, 'githubIssues'])->name('github-issues.index');
