@@ -12,6 +12,7 @@ import {
 } from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { Project } from '@/types/Projects';
+import { integrationsPath } from '@/utils/integrationPaths';
 
 interface SettingsIntegrationDetailProps {
     projects?: Project[];
@@ -36,6 +37,7 @@ export default function SettingsIntegrationDetail({
     integrationId,
     integrationEnabled = false,
     integrationSettings = null,
+    selectedProjectId = null,
     ...detail
 }: SettingsIntegrationDetailProps) {
     const integration = INTEGRATIONS.find(({ id }) => id === integrationId);
@@ -47,6 +49,7 @@ export default function SettingsIntegrationDetail({
             tabId="integrations"
             projects={projects}
             hideTitle
+            tabHref={integrationsPath(selectedProjectId)}
             breadcrumbTrail={[{ label: integration.name }]}
             fullBleed
         >
@@ -54,6 +57,7 @@ export default function SettingsIntegrationDetail({
                 integration={integration}
                 enabled={integrationEnabled}
                 settings={integrationSettings}
+                selectedProjectId={selectedProjectId}
                 {...detail}
             />
         </SettingsLayout>

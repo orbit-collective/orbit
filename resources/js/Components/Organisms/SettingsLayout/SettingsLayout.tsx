@@ -38,6 +38,11 @@ interface SettingsLayoutProps {
      */
     breadcrumbTrail?: BreadcrumbItem[];
     /**
+     * Where the tab's crumb links to when there is a trail, for a tab whose
+     * URL carries state (the project): defaults to the tab's own path.
+     */
+    tabHref?: string;
+    /**
      * Drops the title and description under the breadcrumb, for a page
      * that brings its own heading (the integration page's hero).
      */
@@ -67,6 +72,7 @@ export default function SettingsLayout({
     children,
     fullBleed = false,
     breadcrumbTrail = [],
+    tabHref,
     hideTitle = false,
 }: SettingsLayoutProps) {
     const { t } = useLaravelReactI18n();
@@ -116,7 +122,8 @@ export default function SettingsLayout({
                                                     href:
                                                         breadcrumbTrail.length >
                                                         0
-                                                            ? tab.path
+                                                            ? (tabHref ??
+                                                              tab.path)
                                                             : undefined,
                                                 },
                                                 ...breadcrumbTrail,

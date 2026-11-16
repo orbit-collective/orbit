@@ -53,7 +53,21 @@ interface WorkspaceSettingsIntegrationDetailProps {
  * integration that is wired up - its configuration. It carries only the
  * data of this integration, loaded by the page's own route.
  */
-export default function WorkspaceSettingsIntegrationDetail({
+export default function WorkspaceSettingsIntegrationDetail(
+    props: WorkspaceSettingsIntegrationDetailProps,
+) {
+    // Switching the project re-visits the page with its state preserved. The
+    // body holds drafts, the import progress and the repository picker, all of
+    // which belong to one project, so each project gets a fresh body.
+    return (
+        <WorkspaceSettingsIntegrationDetailBody
+            key={`${props.integration.id}:${props.selectedProjectId ?? 'none'}`}
+            {...props}
+        />
+    );
+}
+
+function WorkspaceSettingsIntegrationDetailBody({
     integration,
     memberProjects = [],
     selectedProjectId = null,
