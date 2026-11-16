@@ -130,3 +130,29 @@ export const CompactControlled: StoryObj = {
         );
     },
 };
+
+/** In a narrow column the pager stacks and keeps only the current page number, whatever the window is. */
+export const CompactNarrow: StoryObj = {
+    render: () => (
+        <div className="w-[300px] rounded-2xl border border-(--border-color) bg-(--surface-color) p-4">
+            <Pagination
+                variant="compact"
+                total={134}
+                page={4}
+                perPage={6}
+                perPageOptions={[6, 12, 24]}
+                onPageChange={() => {}}
+                onPerPageChange={() => {}}
+            />
+        </div>
+    ),
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+        await expect(
+            canvas.getByRole('button', { name: 'Page 4' }),
+        ).toHaveAttribute('aria-current', 'page');
+        await expect(
+            canvas.getByRole('button', { name: 'Next page' }),
+        ).toBeInTheDocument();
+    },
+};
