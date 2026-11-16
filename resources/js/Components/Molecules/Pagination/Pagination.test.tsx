@@ -522,4 +522,37 @@ describe('Pagination, controlled and compact', () => {
             'rounded-full',
         );
     });
+
+    test('the compact pager answers to the width of its own container, not the window', () => {
+        const { container } = renderControlled();
+
+        // A container the layout can query, and numbers that wait for room in it.
+        expect(container.firstElementChild).toHaveClass(
+            '@container',
+            'w-full',
+            'min-w-0',
+        );
+        expect(screen.getByRole('button', { name: 'Page 1' })).toHaveClass(
+            'hidden',
+            '@md:flex',
+        );
+        expect(screen.getByRole('button', { name: 'Page 1' })).not.toHaveClass(
+            'sm:flex',
+        );
+        // The current page is always there.
+        expect(screen.getByRole('button', { name: 'Page 2' })).toHaveClass(
+            'flex',
+        );
+        expect(screen.getByRole('button', { name: 'Page 2' })).not.toHaveClass(
+            'hidden',
+        );
+    });
+
+    test('the default pager still follows the window', () => {
+        const { container } = render(
+            <Pagination links={buildLinks()} from={1} to={10} total={30} />,
+        );
+
+        expect(container.firstElementChild).not.toHaveClass('@container');
+    });
 });

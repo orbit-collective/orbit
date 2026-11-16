@@ -175,6 +175,11 @@ const Pagination = ({
     );
     const showNav = controlled ? lastPage > 1 : numericLinks.length > 1;
 
+    // The compact pager sits in panels of every width (a third of the page
+    // on a wide screen is narrower than a phone), so it follows the width of
+    // its own container, not the window's; the default one is the page's.
+    const hiddenUntilWide = compact ? 'hidden @md:flex' : 'hidden sm:flex';
+
     const buttonSize = compact ? 'min-w-7 h-7 px-1.5 rounded-full text-xs' : '';
 
     // The controlled mode has no URLs: its numbers are buttons.
@@ -201,7 +206,7 @@ const Pagination = ({
                         disabled: isDisabled,
                     }),
                     buttonSize,
-                    hideOnMobile ? 'hidden sm:flex' : 'flex',
+                    hideOnMobile ? hiddenUntilWide : 'flex',
                 )}
             >
                 {renderLabel(label, kind)}
@@ -225,7 +230,7 @@ const Pagination = ({
                 disabled: isLinkDisabled,
             }),
             buttonSize,
-            shouldHideOnMobile ? 'hidden sm:flex' : 'flex',
+            shouldHideOnMobile ? hiddenUntilWide : 'flex',
         );
 
         if (isLinkDisabled) {
@@ -256,19 +261,19 @@ const Pagination = ({
         );
     };
 
-    return (
+    const pager = (
         <div
             className={cn(
                 compact
-                    ? 'relative mt-3 flex flex-col items-center justify-between gap-3 lg:flex-row lg:gap-4'
+                    ? 'relative mt-3 flex flex-col items-center justify-between gap-3 @xl:flex-row @xl:gap-4'
                     : 'relative mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 lg:flex-row lg:gap-0',
                 className,
             )}
         >
             <div
                 className={cn(
-                    'text-center text-(--text-gray-color) lg:text-left',
-                    compact ? 'text-xs' : 'text-sm',
+                    'text-center text-(--text-gray-color)',
+                    compact ? 'text-xs @xl:text-left' : 'text-sm lg:text-left',
                 )}
             >
                 {t('pagination_bar.showing_prefix')}{' '}
@@ -285,7 +290,13 @@ const Pagination = ({
                 </span>{' '}
                 {t('pagination_bar.results')}
             </div>
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:gap-6 xl:flex-nowrap">
+            <div
+                className={
+                    compact
+                        ? 'flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-2'
+                        : 'flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:gap-6 xl:flex-nowrap'
+                }
+            >
                 <div className="flex shrink-0 items-center gap-2">
                     <span
                         aria-hidden="true"
@@ -346,7 +357,7 @@ const Pagination = ({
                                                 disabled: true,
                                             }),
                                             buttonSize,
-                                            'hidden sm:flex',
+                                            hiddenUntilWide,
                                         )}
                                     >
                                         ...
@@ -383,6 +394,13 @@ const Pagination = ({
                 )}
             </div>
         </div>
+    );
+
+    // A container query needs a container: the wrapper makes the pager answer to its own width.
+    return compact ? (
+        <div className="@container w-full min-w-0">{pager}</div>
+    ) : (
+        pager
     );
 };
 
