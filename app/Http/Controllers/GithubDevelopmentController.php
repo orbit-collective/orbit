@@ -35,7 +35,7 @@ class GithubDevelopmentController extends Controller
     {
         $this->authorize('viewGithubDevelopment', $project);
 
-        $this->developmentService->forget($project);
+        $this->developmentService->dropCache($project);
 
         return response()->noContent();
     }

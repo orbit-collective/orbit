@@ -41,6 +41,7 @@ class GithubRelayEventProcessor
         protected AutomationDispatcher $automationDispatcher,
         protected GithubAutomationContextBuilder $automationContextBuilder,
         protected GithubRepositoryRepository $githubRepositoryRepository,
+        protected GithubDevelopmentAnnouncer $developmentAnnouncer,
     ) {}
 
     /**
@@ -48,7 +49,7 @@ class GithubRelayEventProcessor
      */
     public function process(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
     {
-        return match ($event->type) {
+        $outcome = match ($event->type) {
             'pull_request' => match ($event->action) {
                 'opened' => $this->handleOpened($event, $projectIntegration),
                 'reopened', 'closed', 'synchronize' => $this->handleLifecycleEvent($event, $projectIntegration),
@@ -58,6 +59,16 @@ class GithubRelayEventProcessor
             'pull_request_review' => $this->handleReviewSubmitted($event, $projectIntegration),
             default => GithubRelayEventOutcome::Skipped,
         };
+
+        // The Development view shows every pull request of the repository,
+        // linked to an issue or not, so what happened to one is news for it
+        // whatever the outcome of linking was. (A transient failure threw
+        // above: the event comes again and is announced then.)
+        if (in_array($event->type, ['pull_request', 'check_suite', 'pull_request_review'], true)) {
+            $this->developmentAnnouncer->announce($projectIntegration->project_id);
+        }
+
+        return $outcome;
     }
 
     private function handleOpened(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
