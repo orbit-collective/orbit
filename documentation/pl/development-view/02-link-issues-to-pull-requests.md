@@ -42,11 +42,20 @@ File: `app/Services/Integrations/Github/GithubDevelopmentService.php`
   orbit-api (`POST /v1/github/pull-request-update`) i sam zapisuje wiersz
   powiązania, bo dla istniejącego pull requestu nie przyjdzie event
   `opened`.
+  Nowe powiązanie zostawia też ten sam komentarz „Synced with Orbit", który
+  dostaje pull request otwarty ze znacznikiem (`GithubCommentFormatter`, przez
+  `POST /v1/github/pull-request-comment`): raz na nowe powiązanie, a błąd
+  komentarza nigdy nie cofa powiązania.
 - `unlinkIssue()` usuwa znacznik i tylko wiersz tego zgłoszenia.
 - `setPullRequestState()` zamyka lub otwiera ponownie. Celowo **nie**
   rusza powiązań: aktualizuje je webhook i odpala automatyzacje
   nasłuchujące „pull request zamknięty”; przesunięcie ich tutaj sprawiłoby,
   że webhook wyglądałby na nieaktualny i po cichu pominął te automatyzacje.
+
+- `mergePullRequest()` scala metodą `merge`, `squash` lub `rebase` (opcjonalny
+  tytuł commitu oraz sha głowy, którą osoba widziała, więc gałąź, która się
+  przesunęła, jest odrzucana). Powiązania też zostawia webhookowi `closed`
+  (scalony).
 
 Każdy zapis trafia do dziennika aktywności projektu i podbija
 `CacheVersion::development()`.
@@ -56,7 +65,7 @@ Każdy zapis trafia do dziennika aktywności projektu i podbija
 | Akcja | Uprawnienie | Dodatkowo wymaga |
 |---|---|---|
 | Otwarcie widoku, odczyt | `projects.github.development.view` | — |
-| Zamknięcie/otwarcie, powiązanie, odpięcie, szukanie zgłoszeń | `projects.github.development.manage` | połączonego konta GitHub użytkownika |
+| Zamknięcie/otwarcie, scalenie, powiązanie, odpięcie, szukanie zgłoszeń | `projects.github.development.manage` | połączonego konta GitHub użytkownika |
 | Utworzenie gałęzi | `projects.github.development.create` | połączonego konta GitHub użytkownika |
 
 Owner, Admin i Member dostają wszystkie domyślnie, Viewer tylko `view`

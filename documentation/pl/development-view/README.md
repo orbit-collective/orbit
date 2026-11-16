@@ -42,3 +42,22 @@ więc dane nigdy nie są częścią live-przeładowań Inertii. Odczyt wymaga
 wymagają `.manage` **oraz** konta GitHub połączonego z użytkownikiem.
 Nic z tego nie zadziała na prawdziwych danych, dopóki odpowiednie commity
 orbit-api nie trafią na jego gałąź `main` (Netlify wdraża funkcje stamtąd).
+
+## Aktualizacje na żywo
+
+`GithubDevelopmentAnnouncer::announce($projectId)` to jedyne miejsce, które
+mówi „to, co pokazuje widok, się zmieniło": podbija `CacheVersion::development()`
+(żeby kolejne przeładowanie czytało GitHuba od nowa) i wysyła zmianę
+`development` na kanale live projektu. Woła je `GithubDevelopmentService::forget()`
+przy każdym zapisie z widoku oraz `GithubRelayEventProcessor::process()` przy
+każdym evencie relay `pull_request`, `check_suite` i `pull_request_review`,
+niezależnie od tego, czy jest powiązany ze zgłoszeniem. W przeglądarce
+`live/useDevelopmentLive.ts` przeładowuje widok po krótkiej pauzie (seria to
+jedno przeładowanie, własne zmiany osoby są pomijane); bez działającego
+gniazda odpytuje co `LIVE_POLL_INTERVAL` i nadrabia po powrocie gniazda. Tego,
+o czym relay się nie dowiaduje (push na inną gałąź, zgłoszenie, gałąź utworzona
+na GitHubie), nie da się ogłosić, więc widoczna karta dodatkowo odświeża
+wszystko co pięć minut. Aby ogłaszać więcej, dodaj relay nowy typ eventu i
+wywołaj announcer w procesorze; App musi też być zasubskrybowana na ten event
+na GitHubie.
+

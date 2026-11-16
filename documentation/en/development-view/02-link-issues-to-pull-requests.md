@@ -40,11 +40,19 @@ File: `app/Services/Integrations/Github/GithubDevelopmentService.php`
   through orbit-api (`POST /v1/github/pull-request-update`) and writes the
   link row itself, because no `opened` event will come for an existing
   pull request.
+  A new link also leaves the same "Synced with Orbit" comment a pull request
+  gets when it is opened with the marker (`GithubCommentFormatter`, through
+  `POST /v1/github/pull-request-comment`): once per new link, and a failure to
+  comment never undoes the link.
 - `unlinkIssue()` removes the marker and only that issue's row.
 - `setPullRequestState()` closes or reopens. It deliberately **does not**
   touch the links: the webhook updates them and fires the automations
   listening for "pull request closed"; advancing them here would make the
   webhook look stale and silently skip those automations.
+
+- `mergePullRequest()` merges with `merge`, `squash` or `rebase` (an optional
+  commit title, and the head sha the person saw so a branch that moved is
+  refused). It also leaves the links to the `closed` (merged) webhook.
 
 Each write logs to the project's activity log and bumps
 `CacheVersion::development()`.
@@ -54,7 +62,7 @@ Each write logs to the project's activity log and bumps
 | Action | Permission | Also needs |
 |---|---|---|
 | Open the view, read | `projects.github.development.view` | — |
-| Close/reopen, link, unlink, search issues | `projects.github.development.manage` | the user's GitHub account linked |
+| Close/reopen, merge, link, unlink, search issues | `projects.github.development.manage` | the user's GitHub account linked |
 | Create a branch | `projects.github.development.create` | the user's GitHub account linked |
 
 Owner, Admin and Member get all of them by default, Viewer only `view`
