@@ -305,3 +305,15 @@ test('the issue picker needs manage permission and a query', function () {
     $this->actingAs($viewer)->getJson("$this->base/issues?q=a")->assertForbidden();
     $this->actingAs($this->member)->getJson("$this->base/issues")->assertJsonValidationErrors('q');
 });
+
+test('refreshing drops the cached reads', function () {
+    Http::fake(['*/v1/github/branches*' => Http::sequence()
+        ->push(['success' => true, 'data' => ['branches' => []]])
+        ->push(['success' => true, 'data' => ['branches' => [['name' => 'fresh']]]])]);
+
+    $this->actingAs($this->member)->getJson("$this->base/branches$this->query")->assertJsonPath('branches', []);
+    $this->actingAs($this->member)->postJson("$this->base/refresh")->assertNoContent();
+    $this->actingAs($this->member)->getJson("$this->base/branches$this->query")->assertJsonPath('branches.0.name', 'fresh');
+
+    $this->actingAs(User::factory()->create())->postJson("$this->base/refresh")->assertForbidden();
+});

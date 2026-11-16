@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Services\Integrations\Github\GithubBranchService;
 use App\Services\Integrations\Github\GithubDevelopmentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -28,6 +29,16 @@ class GithubDevelopmentController extends Controller
         protected GithubDevelopmentService $developmentService,
         protected GithubBranchService $branchService,
     ) {}
+
+    /** Drops what the view cached, so its next reads go to GitHub (the refresh button). */
+    public function refresh(Project $project): Response
+    {
+        $this->authorize('viewGithubDevelopment', $project);
+
+        $this->developmentService->forget($project);
+
+        return response()->noContent();
+    }
 
     public function pullRequests(Request $request, Project $project): JsonResponse
     {
