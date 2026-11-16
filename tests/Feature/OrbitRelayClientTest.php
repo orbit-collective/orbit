@@ -335,3 +335,10 @@ test('getChecksBatch sends the refs together and returns them by ref', function 
     expect($this->client->getChecksBatch('tok', 5, ['abc', 'def']))->toBe(['abc' => ['state' => 'passed'], 'def' => null]);
     Http::assertSent(fn ($request) => str_contains(urldecode($request->url()), 'refs=abc,def'));
 });
+
+test('commentOnPullRequest posts the text for a pull request of a repository', function () {
+    Http::fake(['*/v1/github/pull-request-comment' => Http::response(['success' => true, 'data' => ['id' => 9, 'url' => 'https://github.com/o/r/pull/7#c9']], 201)]);
+
+    expect($this->client->commentOnPullRequest('tok', 5, 7, 'Synced'))->toBe(['id' => 9, 'url' => 'https://github.com/o/r/pull/7#c9']);
+    Http::assertSent(fn ($request) => $request->data() === ['repositoryId' => 5, 'number' => 7, 'body' => 'Synced'] && $request->hasHeader('Authorization', 'Bearer tok'));
+});

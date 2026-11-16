@@ -13,6 +13,7 @@ use App\Repositories\IssueRepository;
 use App\Repositories\ProjectIntegrationRepository;
 use App\Services\ActivityLogService;
 use App\Support\Cache\CacheVersion;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -57,6 +58,7 @@ class GithubDevelopmentService
         protected GithubIssueResolver $issueResolver,
         protected ActivityLogService $activityLogService,
         protected IssueRepository $issueRepository,
+        protected GithubCommentFormatter $commentFormatter,
     ) {}
 
     /**
@@ -202,6 +204,8 @@ class GithubDevelopmentService
             $this->call(fn () => $this->relayClient->updatePullRequest($token, $repositoryId, $number, ['body' => $body]));
         }
 
+        $alreadyLinked = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $pullRequest['id'], $issue->id) !== null;
+
         $this->externalIssueLinkRepository->upsertFor($projectIntegration, (string) $pullRequest['id'], [
             'issue_id' => $issue->id,
             'external_key' => $this->pullRequestKey($repository, $number),
@@ -218,6 +222,22 @@ class GithubDevelopmentService
             'review_status' => $this->reviewStatusOf($pullRequest),
             'last_synced_at' => now(),
         ]);
+
+        // The same bot comment a pull request gets when it is opened with the
+        // marker, so the link is as visible on GitHub as one made there. Only
+        // for a new link (linking again says nothing new), and never fatal:
+        // the link is made, the comment is a courtesy.
+        if (! $alreadyLinked) {
+            try {
+                $this->relayClient->commentOnPullRequest($token, $repositoryId, $number, $this->commentFormatter->format([$issue], $project));
+            } catch (OrbitRelayApiException $exception) {
+                Log::warning('Could not comment on a pull request linked from the development view', [
+                    'projectId' => $project->id,
+                    'pullRequestNumber' => $number,
+                    'code' => $exception->errorCode,
+                ]);
+            }
+        }
 
         $this->activityLogService->log($project->id, "Linked #$issue->number to pull request $repository->owner/$repository->name#$number");
 
