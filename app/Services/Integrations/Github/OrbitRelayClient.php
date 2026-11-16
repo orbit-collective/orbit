@@ -292,15 +292,30 @@ class OrbitRelayClient
         return $data['commits'];
     }
 
-    /** @return list<array<string, mixed>> */
-    public function listBranches(string $relayToken, int $repositoryId): array
+    /**
+     * One page of branches, default first, with the repository's real total
+     * (orbit-api reads every page of GitHub's list). An older orbit-api
+     * answers without a total; the page's own count stands in for it.
+     *
+     * @return array{branches: list<array<string, mixed>>, total: int, page: int, perPage: int}
+     */
+    public function listBranches(string $relayToken, int $repositoryId, int $page = 1, int $perPage = 10): array
     {
         $data = $this->request(
-            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/branches', ['repositoryId' => $repositoryId]),
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/branches', [
+                'repositoryId' => $repositoryId,
+                'page' => $page,
+                'perPage' => $perPage,
+            ]),
             'GET /v1/github/branches',
         );
 
-        return $data['branches'];
+        return [
+            'branches' => $data['branches'],
+            'total' => $data['total'] ?? count($data['branches']),
+            'page' => $data['page'] ?? $page,
+            'perPage' => $data['perPage'] ?? $perPage,
+        ];
     }
 
     /** @return array<string, mixed> */

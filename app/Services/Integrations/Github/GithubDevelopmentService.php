@@ -101,12 +101,12 @@ class GithubDevelopmentService
         return $this->remember($project, "commits:$repositoryId:$branch:$page:$perPage", fn () => $this->relayClient->listCommits($token, $repositoryId, $branch, $page, $perPage));
     }
 
-    /** @return list<array<string, mixed>> */
-    public function branches(Project $project, int $repositoryId): array
+    /** @return array{branches: list<array<string, mixed>>, total: int, page: int, perPage: int} */
+    public function branches(Project $project, int $repositoryId, int $page, int $perPage): array
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "branches:$repositoryId", fn () => $this->relayClient->listBranches($token, $repositoryId));
+        return $this->remember($project, "branches:$repositoryId:$page:$perPage", fn () => $this->relayClient->listBranches($token, $repositoryId, $page, $perPage));
     }
 
     /** @return array<string, mixed> */

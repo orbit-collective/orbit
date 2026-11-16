@@ -270,7 +270,7 @@ test('the development reads send their query and unwrap the envelope', function 
 
     expect($this->client->listPullRequests('tok', 5, 'open', 2, 10))->toBe([['number' => 1]])
         ->and($this->client->listCommits('tok', 5, 'feat', 1, 30))->toBe([['sha' => 'a']])
-        ->and($this->client->listBranches('tok', 5))->toBe([['name' => 'main']])
+        ->and($this->client->listBranches('tok', 5)['branches'])->toBe([['name' => 'main']])
         ->and($this->client->getChecks('tok', 5, 'abc'))->toBe(['state' => 'passed'])
         ->and($this->client->getInsights('tok', 5))->toBe(['contributors' => []]);
 
@@ -297,4 +297,17 @@ test('getPullRequest asks for one number and updatePullRequest posts only the ch
 
     Http::assertSent(fn ($request) => str_contains($request->url(), 'pull-requests?') && str_contains($request->url(), 'number=7'));
     Http::assertSent(fn ($request) => str_ends_with($request->url(), '/pull-request-update') && $request->data() === ['repositoryId' => 5, 'number' => 7, 'state' => 'closed']);
+});
+
+test('listBranches asks for a page and reports the real total', function () {
+    Http::fake(['*/v1/github/branches*' => Http::response(['success' => true, 'data' => ['branches' => [['name' => 'a']], 'total' => 134, 'page' => 3, 'perPage' => 6]])]);
+
+    expect($this->client->listBranches('tok', 5, 3, 6))->toBe(['branches' => [['name' => 'a']], 'total' => 134, 'page' => 3, 'perPage' => 6]);
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'page=3') && str_contains($request->url(), 'perPage=6'));
+});
+
+test('listBranches copes with an orbit-api that does not report a total yet', function () {
+    Http::fake(['*/v1/github/branches*' => Http::response(['success' => true, 'data' => ['branches' => [['name' => 'a'], ['name' => 'b']]]])]);
+
+    expect($this->client->listBranches('tok', 5))->toMatchArray(['total' => 2, 'page' => 1, 'perPage' => 10]);
 });
