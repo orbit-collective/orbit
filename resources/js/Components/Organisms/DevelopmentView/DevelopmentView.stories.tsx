@@ -91,7 +91,9 @@ export const Default: Story = {
         await expect(
             await canvas.findByText('Add login redirect'),
         ).toBeInTheDocument();
-        await expect(await canvas.findByText('Commit activity')).toBeInTheDocument();
+        await expect(
+            await canvas.findByText('Commit activity'),
+        ).toBeInTheDocument();
     },
 };
 

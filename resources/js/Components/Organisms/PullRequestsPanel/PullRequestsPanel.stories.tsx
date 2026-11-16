@@ -95,7 +95,9 @@ export const MergedTab: Story = {
 export const Loading: Story = {
     args: { pullRequests: null, loading: true },
     play: async ({ canvasElement }) => {
-        await expect(within(canvasElement).getByRole('status')).toBeInTheDocument();
+        await expect(
+            within(canvasElement).getByRole('status'),
+        ).toBeInTheDocument();
     },
 };
 
@@ -105,6 +107,8 @@ export const Failed: Story = {
         error: 'Could not load pull requests from GitHub.',
     },
     play: async ({ canvasElement }) => {
-        await expect(within(canvasElement).getByRole('alert')).toBeInTheDocument();
+        await expect(
+            within(canvasElement).getByRole('alert'),
+        ).toBeInTheDocument();
     },
 };
