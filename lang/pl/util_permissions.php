@@ -81,15 +81,15 @@ return [
     ],
     'projects_github_development_create' => [
         'label' => 'Tworzenie gałęzi i pull requestów',
-        'description' => 'Tworzenie gałęzi lub pull requestu GitHub z panelu Development zgłoszenia.',
+        'description' => 'Tworzenie gałęzi lub pull requestu GitHub z panelu Rozwój zgłoszenia.',
     ],
     'projects_github_development_view' => [
-        'label' => 'Wyświetlanie widoku Development',
-        'description' => 'Otwieranie widoku Development: pull requesty, commity, gałęzie, status CI i statystyki repozytorium.',
+        'label' => 'Wyświetlanie widoku Rozwój',
+        'description' => 'Otwieranie widoku Rozwój: pull requesty, commity, gałęzie, status CI i statystyki repozytorium.',
     ],
     'projects_github_development_manage' => [
-        'label' => 'Zarządzanie widokiem Development',
-        'description' => 'Zamykanie i ponowne otwieranie pull requestów oraz łączenie z nimi zgłoszeń z widoku Development.',
+        'label' => 'Zarządzanie widokiem Rozwój',
+        'description' => 'Zamykanie i ponowne otwieranie pull requestów oraz łączenie z nimi zgłoszeń z widoku Rozwój.',
     ],
     'projects_priorities_view' => [
         'label' => 'Wyświetlanie priorytetów',

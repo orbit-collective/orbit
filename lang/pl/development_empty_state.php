@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     'not_connected' => [
-        'title' => 'Połącz GitHub, aby zobaczyć development',
+        'title' => 'Połącz GitHub, aby zobaczyć rozwój projektu',
         'description' => 'Pull requesty, testy, commity i gałęzie Twoich repozytoriów pojawią się tutaj, gdy GitHub zostanie połączony z projektem.',
         'action' => 'Połącz GitHub',
     ],

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'title' => 'Dostosuj widok developmentu',
+    'title' => 'Dostosuj widok rozwoju',
     'pull_requests' => 'Pull requesty',
     'pull_requests_hint' => 'Pull requesty są czytane według ostatniej aktualizacji, od najnowszych, stronami.',
     'range' => 'Przedział czasu',

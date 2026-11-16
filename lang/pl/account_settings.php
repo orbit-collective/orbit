@@ -40,7 +40,7 @@ return [
                     'description' => 'Chronologiczny strumień całej aktywności w zgłoszeniach.',
                 ],
                 'Development' => [
-                    'name' => 'Development',
+                    'name' => 'Rozwój',
                     'description' => 'Pull requesty, CI, commity i gałęzie z GitHuba.',
                 ],
             ],
