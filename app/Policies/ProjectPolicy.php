@@ -79,6 +79,16 @@ class ProjectPolicy
         return $project->hasPermission($user, Permission::INTEGRATIONS_UPDATE);
     }
 
+    public function viewGithubDevelopment(User $user, Project $project): bool
+    {
+        return $project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_VIEW);
+    }
+
+    public function manageGithubDevelopment(User $user, Project $project): bool
+    {
+        return $project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_MANAGE);
+    }
+
     public function viewAutomation(User $user, Project $project): bool
     {
         return $project->hasPermission($user, Permission::AUTOMATION_VIEW);
