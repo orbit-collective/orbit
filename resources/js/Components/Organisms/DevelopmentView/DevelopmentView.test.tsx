@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import axios from 'axios';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -21,6 +21,21 @@ import {
 import DevelopmentView from './DevelopmentView';
 
 vi.mock('axios');
+
+const live = vi.hoisted(() => ({
+    handlers: null as null | {
+        onChange: () => void;
+        onPoll: () => void;
+        onSafetyRefresh: () => void;
+    },
+    projectId: 0,
+}));
+vi.mock('@/live/useDevelopmentLive', () => ({
+    useDevelopmentLive: (projectId: number, handlers: typeof live.handlers) => {
+        live.projectId = projectId;
+        live.handlers = handlers;
+    },
+}));
 
 const addAlert = vi.fn();
 vi.mock('@/context/AlertContext', () => ({ useAlert: () => ({ addAlert }) }));
@@ -543,5 +558,42 @@ describe('DevelopmentView', () => {
         expect(
             screen.queryByRole('button', { name: /Create branch 12/ }),
         ).not.toBeInTheDocument();
+    });
+
+    test("follows live changes: someone else's change and a poll read everything again", async () => {
+        renderView();
+        await screen.findByText('Add login redirect');
+        expect(live.projectId).toBe(3);
+
+        const reads = () => vi.mocked(axios.get).mock.calls.length;
+        let before = reads();
+        act(() => live.handlers!.onChange());
+        await waitFor(() => expect(reads()).toBeGreaterThan(before));
+
+        before = reads();
+        act(() => live.handlers!.onPoll());
+        await waitFor(() => expect(reads()).toBeGreaterThan(before));
+
+        // Neither of those drops the server's cache: it was already dropped (or is short-lived).
+        expect(axios.post).not.toHaveBeenCalled();
+    });
+
+    test('the slow sweep drops the server cache first, like the refresh button', async () => {
+        renderView();
+        await screen.findByText('Add login redirect');
+        const before = vi.mocked(axios.get).mock.calls.length;
+
+        act(() => live.handlers!.onSafetyRefresh());
+
+        await waitFor(() =>
+            expect(axios.post).toHaveBeenCalledWith(
+                '/projects.development.refresh/3',
+            ),
+        );
+        await waitFor(() =>
+            expect(vi.mocked(axios.get).mock.calls.length).toBeGreaterThan(
+                before,
+            ),
+        );
     });
 });
