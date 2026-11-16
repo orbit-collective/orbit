@@ -28,7 +28,20 @@ use Illuminate\Validation\ValidationException;
  */
 class GithubDevelopmentService
 {
-    private const int CACHE_TTL_SECONDS = 30;
+    /**
+     * How long a read is reused, by how fast it changes: what people act on
+     * (pull requests, CI) stays short, what barely moves (statistics,
+     * branches) lives longer. Every write drops all of them.
+     */
+    private const int TTL_PULL_REQUESTS = 30;
+
+    private const int TTL_CHECKS = 30;
+
+    private const int TTL_COMMITS = 60;
+
+    private const int TTL_BRANCHES = 120;
+
+    private const int TTL_INSIGHTS = 600;
 
     private const array ERROR_MESSAGES = [
         'GITHUB_REPOSITORY_NOT_ALLOWED' => 'That repository is not connected to this project.',
@@ -73,14 +86,39 @@ class GithubDevelopmentService
         ];
     }
 
-    /** @return list<array<string, mixed>> */
-    public function pullRequests(Project $project, int $repositoryId, string $state, int $page, int $perPage): array
+    /**
+     * One page of the repository's pull requests with the issues linked to
+     * each. `$since` bounds them by last update; `hasMore` says whether the
+     * next page can still hold more inside that range. CI is never part of
+     * it (see checksBatch()): the list must not wait for the slowest check.
+     *
+     * @return array{pullRequests: list<array<string, mixed>>, hasMore: bool}
+     */
+    public function pullRequests(Project $project, int $repositoryId, string $state, int $page, int $perPage, ?string $since = null): array
     {
         [$projectIntegration, $token, $repository] = $this->context($project, $repositoryId);
 
-        $pullRequests = $this->remember($project, "pulls:$repositoryId:$state:$page:$perPage", fn () => $this->relayClient->listPullRequests($token, $repositoryId, $state, $page, $perPage));
+        $result = $this->remember($project, "pulls:$repositoryId:$state:$page:$perPage:$since", self::TTL_PULL_REQUESTS, fn () => $this->relayClient->listPullRequests($token, $repositoryId, $state, $page, $perPage, $since, withCi: false));
 
-        return $this->withLinkedIssues($projectIntegration, $repository, $pullRequests);
+        return [
+            'pullRequests' => $this->withLinkedIssues($projectIntegration, $repository, $result['pullRequests']),
+            'hasMore' => $result['hasMore'],
+        ];
+    }
+
+    /**
+     * The CI of the commits a view is showing, one call for all of them.
+     *
+     * @param  list<string>  $refs
+     * @return array<string, array<string, mixed>|null>
+     */
+    public function checksBatch(Project $project, int $repositoryId, array $refs): array
+    {
+        [, $token] = $this->context($project, $repositoryId);
+
+        sort($refs);
+
+        return $this->remember($project, "checks-batch:$repositoryId:".md5(implode(',', $refs)), self::TTL_CHECKS, fn () => $this->relayClient->getChecksBatch($token, $repositoryId, $refs));
     }
 
     /** @return array<string, mixed> */
@@ -98,7 +136,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "commits:$repositoryId:$branch:$page:$perPage", fn () => $this->relayClient->listCommits($token, $repositoryId, $branch, $page, $perPage));
+        return $this->remember($project, "commits:$repositoryId:$branch:$page:$perPage", self::TTL_COMMITS, fn () => $this->relayClient->listCommits($token, $repositoryId, $branch, $page, $perPage));
     }
 
     /** @return array{branches: list<array<string, mixed>>, total: int, page: int, perPage: int} */
@@ -106,7 +144,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "branches:$repositoryId:$page:$perPage", fn () => $this->relayClient->listBranches($token, $repositoryId, $page, $perPage));
+        return $this->remember($project, "branches:$repositoryId:$page:$perPage", self::TTL_BRANCHES, fn () => $this->relayClient->listBranches($token, $repositoryId, $page, $perPage));
     }
 
     /** @return array<string, mixed> */
@@ -114,7 +152,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "checks:$repositoryId:$ref", fn () => $this->relayClient->getChecks($token, $repositoryId, $ref));
+        return $this->remember($project, "checks:$repositoryId:$ref", self::TTL_CHECKS, fn () => $this->relayClient->getChecks($token, $repositoryId, $ref));
     }
 
     /** @return array<string, mixed> */
@@ -122,7 +160,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "insights:$repositoryId", fn () => $this->relayClient->getInsights($token, $repositoryId));
+        return $this->remember($project, "insights:$repositoryId", self::TTL_INSIGHTS, fn () => $this->relayClient->getInsights($token, $repositoryId));
     }
 
     /**
@@ -293,12 +331,12 @@ class GithubDevelopmentService
      * @param  callable(): T  $callback
      * @return T
      */
-    private function remember(Project $project, string $key, callable $callback): mixed
+    private function remember(Project $project, string $key, int $ttl, callable $callback): mixed
     {
         return CacheVersion::remember(
             CacheVersion::development($project->id),
             "development:$project->id:$key",
-            self::CACHE_TTL_SECONDS,
+            $ttl,
             fn () => $this->call($callback),
         );
     }

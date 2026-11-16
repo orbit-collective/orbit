@@ -47,19 +47,19 @@ class GithubDevelopmentController extends Controller
         $data = $request->validate([
             'repository_id' => 'required|integer|min:1',
             'state' => ['sometimes', Rule::in(['open', 'closed', 'all'])],
+            'since' => 'sometimes|nullable|date_format:Y-m-d',
             'page' => 'sometimes|integer|min:1',
             'per_page' => 'sometimes|integer|min:1|max:'.self::MAX_PER_PAGE,
         ]);
 
-        return response()->json([
-            'pullRequests' => $this->developmentService->pullRequests(
-                $project,
-                $data['repository_id'],
-                $data['state'] ?? 'open',
-                $data['page'] ?? 1,
-                $data['per_page'] ?? 30,
-            ),
-        ]);
+        return response()->json($this->developmentService->pullRequests(
+            $project,
+            $data['repository_id'],
+            $data['state'] ?? 'open',
+            $data['page'] ?? 1,
+            $data['per_page'] ?? 30,
+            $data['since'] ?? null,
+        ));
     }
 
     public function pullRequest(Request $request, Project $project, int $number): JsonResponse
@@ -116,6 +116,20 @@ class GithubDevelopmentController extends Controller
         ]);
 
         return response()->json($this->developmentService->checks($project, $data['repository_id'], $data['ref']));
+    }
+
+    /** The CI of the pull requests a view is showing, in one call. */
+    public function checksBatch(Request $request, Project $project): JsonResponse
+    {
+        $this->authorize('viewGithubDevelopment', $project);
+
+        $data = $request->validate([
+            'repository_id' => 'required|integer|min:1',
+            'refs' => 'required|array|min:1|max:20',
+            'refs.*' => ['required', 'string', 'max:200', 'regex:/^[A-Za-z0-9][A-Za-z0-9._\/-]*$/'],
+        ]);
+
+        return response()->json(['checks' => $this->developmentService->checksBatch($project, $data['repository_id'], array_values(array_unique($data['refs'])))]);
     }
 
     public function insights(Request $request, Project $project): JsonResponse

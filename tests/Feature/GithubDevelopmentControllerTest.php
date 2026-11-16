@@ -335,3 +335,41 @@ test('branches are read a page at a time and the page is part of the cache key',
     Http::assertSentCount(2);
     $this->actingAs($this->member)->getJson("$this->base/branches$this->query&per_page=500")->assertJsonValidationErrors('per_page');
 });
+
+test('a pull request page carries hasMore and is asked for without CI, bounded by the date', function () {
+    Http::fake(['*/v1/github/pull-requests*' => relayOk(['pullRequests' => [relayPullRequest()], 'hasMore' => true])]);
+
+    $this->actingAs($this->member)->getJson("$this->base/pull-requests$this->query&state=all&since=2026-08-01&per_page=100")
+        ->assertOk()
+        ->assertJsonPath('hasMore', true)
+        ->assertJsonPath('pullRequests.0.number', 7);
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'since=2026-08-01') && str_contains($request->url(), 'ci=none') && str_contains($request->url(), 'perPage=100'));
+    $this->actingAs($this->member)->getJson("$this->base/pull-requests$this->query&since=last-week")->assertJsonValidationErrors('since');
+});
+
+test('pull request pages of different ranges are cached apart', function () {
+    Http::fake(['*/v1/github/pull-requests*' => relayOk(['pullRequests' => [], 'hasMore' => false])]);
+
+    foreach (['2026-08-01', '2026-08-01', '2026-09-01'] as $since) {
+        $this->actingAs($this->member)->getJson("$this->base/pull-requests$this->query&since=$since")->assertOk();
+    }
+
+    Http::assertSentCount(2);
+});
+
+test('the CI of several pull requests comes in one call', function () {
+    Http::fake(['*/v1/github/checks*' => relayOk(['checks' => ['abc' => ['state' => 'passed'], 'def' => null]])]);
+
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=abc&refs[]=def&refs[]=abc")
+        ->assertOk()
+        ->assertJsonPath('checks.abc.state', 'passed')
+        ->assertJsonPath('checks.def', null);
+
+    Http::assertSentCount(1);
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query")->assertJsonValidationErrors('refs');
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=a b")->assertJsonValidationErrors('refs.0');
+    $tooMany = collect(range(1, 21))->map(fn ($i) => "refs[]=r$i")->implode('&');
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&$tooMany")->assertJsonValidationErrors('refs');
+    $this->actingAs(User::factory()->create())->getJson("$this->base/checks-batch$this->query&refs[]=abc")->assertForbidden();
+});
