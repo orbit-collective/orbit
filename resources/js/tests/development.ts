@@ -135,7 +135,10 @@ export const buildInsights = (
         { name: 'PHP', bytes: 400 },
     ],
     commitActivity: Array.from({ length: 12 }, (_, index) => ({
-        weekStart: `2026-0${(index % 9) + 1}-01`,
+        // One entry per week, oldest first, so the dates (the chart's keys) are unique.
+        weekStart: new Date(Date.UTC(2026, 0, 5 + index * 7))
+            .toISOString()
+            .slice(0, 10),
         total: index + 1,
     })),
     ...overrides,
