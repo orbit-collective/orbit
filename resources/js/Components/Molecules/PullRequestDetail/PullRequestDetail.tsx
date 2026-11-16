@@ -8,6 +8,9 @@ import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatusPill from '@/Components/Atoms/StatusPill/StatusPill';
 import CiRunList from '@/Components/Molecules/CiRunList/CiRunList';
 import CommitItem from '@/Components/Molecules/CommitItem/CommitItem';
+import PullRequestMergeForm, {
+    MergeOptions,
+} from '@/Components/Molecules/PullRequestMergeForm/PullRequestMergeForm';
 import { useDevelopmentResource } from '@/hooks/useDevelopmentResource';
 import {
     DevelopmentOverview,
@@ -15,7 +18,7 @@ import {
     DevelopmentPullRequestDetail,
 } from '@/types/Development';
 import { cn } from '@/utils/cn';
-import { reviewLook } from '@/utils/development';
+import { mergeableLook, reviewLook } from '@/utils/development';
 import { FOCUS_RING } from '@/utils/focusRing';
 
 const COMMITS_SHOWN = 5;
@@ -30,6 +33,8 @@ interface PullRequestDetailProps {
     version: number;
     busy: boolean;
     onSetState: (state: 'open' | 'closed') => void;
+    /** Merges with the chosen method; resolves true when it worked. */
+    onMerge: (options: MergeOptions) => Promise<boolean>;
     onLinkIssue: () => void;
     onUnlinkIssue: (issueId: number) => void;
 }
@@ -51,6 +56,7 @@ export default function PullRequestDetail({
     version,
     busy,
     onSetState,
+    onMerge,
     onLinkIssue,
     onUnlinkIssue,
 }: PullRequestDetailProps) {
@@ -74,6 +80,7 @@ export default function PullRequestDetail({
     }, [version, reload]);
 
     const [confirming, setConfirming] = useState(false);
+    const [merging, setMerging] = useState(false);
     const canChange = abilities.manage && githubLinked;
     const closing = pullRequest.state === 'open';
     const canToggle = pullRequest.state !== 'merged';
@@ -107,6 +114,9 @@ export default function PullRequestDetail({
     }
 
     const reviews = data.reviews.filter((review) => review.author);
+    const standing = mergeableLook(data.mergeableState);
+    const canMerge =
+        canChange && pullRequest.state === 'open' && !pullRequest.draft;
 
     return (
         <div
@@ -302,6 +312,28 @@ export default function PullRequestDetail({
                     <Icon name="ExternalLink" size={14} />
                     {t('pull_request_detail.open_on_github')}
                 </a>
+                {canMerge && (
+                    <Button
+                        type="button"
+                        className="px-3 py-1.5"
+                        isDisabled={busy || standing?.blocksMerge === true}
+                        aria-expanded={merging}
+                        title={
+                            standing?.blocksMerge
+                                ? t('pull_request_detail.merge_conflicts')
+                                : undefined
+                        }
+                        onClick={() => setMerging((open) => !open)}
+                    >
+                        <Icon name="GitMerge" size={14} />
+                        {t('pull_request_detail.merge')}
+                    </Button>
+                )}
+                {standing && pullRequest.state === 'open' && (
+                    <StatusPill tone={standing.tone} icon={standing.icon}>
+                        {t(standing.labelKey)}
+                    </StatusPill>
+                )}
                 {canChange && canToggle && (
                     <Button
                         type="button"
@@ -343,6 +375,20 @@ export default function PullRequestDetail({
                     </span>
                 )}
             </div>
+            {canMerge && merging && (
+                <PullRequestMergeForm
+                    number={pullRequest.number}
+                    title={pullRequest.title}
+                    busy={busy}
+                    onMerge={async (options) => {
+                        const merged = await onMerge(options);
+                        if (merged) setMerging(false);
+
+                        return merged;
+                    }}
+                    onCancel={() => setMerging(false)}
+                />
+            )}
         </div>
     );
 }

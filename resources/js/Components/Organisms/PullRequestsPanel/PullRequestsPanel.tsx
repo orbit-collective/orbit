@@ -7,6 +7,7 @@ import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import PullRequestDetail from '@/Components/Molecules/PullRequestDetail/PullRequestDetail';
+import { MergeOptions } from '@/Components/Molecules/PullRequestMergeForm/PullRequestMergeForm';
 import PullRequestRow from '@/Components/Molecules/PullRequestRow/PullRequestRow';
 import LinkIssueModal from '@/Components/Organisms/LinkIssueModal/LinkIssueModal';
 import { useStoredChoice } from '@/hooks/useStoredChoice';
@@ -60,6 +61,11 @@ interface PullRequestsPanelProps {
     version: number;
     busy: boolean;
     onSetState: (number: number, state: 'open' | 'closed') => void;
+    onMerge: (
+        number: number,
+        options: MergeOptions,
+        headSha: string,
+    ) => Promise<boolean>;
     onLinkIssue: (number: number, issueId: number) => Promise<boolean>;
     onUnlinkIssue: (number: number, issueId: number) => void;
     className?: string;
@@ -96,6 +102,7 @@ export default function PullRequestsPanel({
     version,
     busy,
     onSetState,
+    onMerge,
     onLinkIssue,
     onUnlinkIssue,
     className,
@@ -257,6 +264,13 @@ export default function PullRequestsPanel({
                                     busy={busy}
                                     onSetState={(state) =>
                                         onSetState(pullRequest.number, state)
+                                    }
+                                    onMerge={(options) =>
+                                        onMerge(
+                                            pullRequest.number,
+                                            options,
+                                            pullRequest.headSha,
+                                        )
                                     }
                                     onLinkIssue={() => setLinking(pullRequest)}
                                     onUnlinkIssue={(issueId) =>

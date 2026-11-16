@@ -63,6 +63,7 @@ const renderPanel = (
         version: 0,
         busy: false,
         onSetState: vi.fn(),
+        onMerge: vi.fn().mockResolvedValue(true),
         onLinkIssue: vi.fn().mockResolvedValue(true),
         onUnlinkIssue: vi.fn(),
         ...overrides,
@@ -359,5 +360,29 @@ describe('PullRequestsPanel', () => {
         renderPanel();
 
         expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+    });
+
+    test('merging passes the pull request number, the options and the head the person saw', async () => {
+        const { props } = renderPanel({
+            pullRequests: [
+                buildPullRequest({ number: 5, headSha: 'f00dbabe' }),
+            ],
+        });
+
+        await userEvent.click(
+            screen.getByRole('button', { name: /Add login redirect/ }),
+        );
+        await screen.findByText('+120');
+        await userEvent.click(screen.getByRole('button', { name: 'Merge' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Squash' }));
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Confirm squash and merge' }),
+        );
+
+        expect(props.onMerge).toHaveBeenCalledWith(
+            5,
+            { method: 'squash', commitTitle: 'Add login redirect (#5)' },
+            'f00dbabe',
+        );
     });
 });

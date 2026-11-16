@@ -61,6 +61,50 @@ describe('useDevelopmentActions', () => {
         expect(onChanged).toHaveBeenCalledTimes(2);
     });
 
+    test('merging posts the method, the title and the head commit, and toasts', async () => {
+        const result = setup();
+
+        await act(async () => {
+            await result.current.mergePullRequest(
+                7,
+                { method: 'squash', commitTitle: 'Add login (#7)' },
+                'abc1234',
+            );
+        });
+        await act(async () => {
+            await result.current.mergePullRequest(
+                7,
+                { method: 'rebase' },
+                'abc1234',
+            );
+        });
+
+        expect(axios.post).toHaveBeenNthCalledWith(
+            1,
+            '/projects.development.pull-requests.merge/5/7',
+            {
+                repository_id: 9,
+                method: 'squash',
+                head_sha: 'abc1234',
+                commit_title: 'Add login (#7)',
+            },
+        );
+        expect(axios.post).toHaveBeenNthCalledWith(
+            2,
+            '/projects.development.pull-requests.merge/5/7',
+            {
+                repository_id: 9,
+                method: 'rebase',
+                head_sha: 'abc1234',
+            },
+        );
+        expect(addAlert).toHaveBeenCalledWith(
+            'Merged pull request #7.',
+            'success',
+        );
+        expect(onChanged).toHaveBeenCalledTimes(2);
+    });
+
     test('linking and unlinking an issue', async () => {
         const result = setup();
 

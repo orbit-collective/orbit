@@ -15,6 +15,13 @@ return [
         'pending' => 'Checks running',
         'none' => 'No checks',
     ],
+    'mergeable' => [
+        'clean' => 'Ready to merge',
+        'unstable' => 'Checks not passing',
+        'behind' => 'Behind the base branch',
+        'blocked' => 'Blocked by branch rules',
+        'dirty' => 'Has conflicts',
+    ],
     'review' => [
         'approved' => 'Approved',
         'changes_requested' => 'Changes requested',
