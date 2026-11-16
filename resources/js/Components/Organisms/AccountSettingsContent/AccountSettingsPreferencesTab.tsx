@@ -25,12 +25,13 @@ import {
 
 const issueViewOptions: Array<{
     id: IssuePageLooks;
-    icon: 'Rows3' | 'Columns3' | 'CalendarDays' | 'Activity';
+    icon: 'Rows3' | 'Columns3' | 'CalendarDays' | 'Activity' | 'GitPullRequest';
 }> = [
     { id: 'List', icon: 'Rows3' },
     { id: 'Board', icon: 'Columns3' },
     { id: 'Calendar', icon: 'CalendarDays' },
     { id: 'Activity', icon: 'Activity' },
+    { id: 'Development', icon: 'GitPullRequest' },
 ];
 
 const themeOptions: ThemeMode[] = ['dark', 'light', 'system'];
@@ -70,7 +71,8 @@ export default function AccountSettingsPreferencesTab() {
             saved === 'List' ||
             saved === 'Board' ||
             saved === 'Calendar' ||
-            saved === 'Activity'
+            saved === 'Activity' ||
+            saved === 'Development'
         ) {
             return saved;
         }

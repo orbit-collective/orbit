@@ -44,6 +44,7 @@ describe('AccountSettingsIssueViewCard Component', () => {
         ['Board', 'Columns3'],
         ['Calendar', 'CalendarDays'],
         ['Activity', 'Activity'],
+        ['Development', 'GitPullRequest'],
     ] as const)('renders a distinct preview for the %s view', (view, icon) => {
         const { container } = render(
             <AccountSettingsIssueViewCard
@@ -80,7 +81,7 @@ describe('AccountSettingsIssueViewCard Component', () => {
 
 describe('AccountSettingsIssueViewCard previews', () => {
     const renderView = (
-        view: 'List' | 'Board' | 'Calendar' | 'Activity',
+        view: 'List' | 'Board' | 'Calendar' | 'Activity' | 'Development',
         selected = false,
     ) =>
         render(
@@ -93,7 +94,13 @@ describe('AccountSettingsIssueViewCard previews', () => {
             />,
         );
 
-    test.each(['List', 'Board', 'Calendar', 'Activity'] as const)(
+    test.each([
+        'List',
+        'Board',
+        'Calendar',
+        'Activity',
+        'Development',
+    ] as const)(
         'the %s mock-up draws itself and ends up visible',
         async (view) => {
             const { container } = renderView(view);

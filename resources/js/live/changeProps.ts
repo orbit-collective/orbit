@@ -58,7 +58,8 @@ export function projectPageReloads(
         return reloads;
     }
 
-    if (issuesChanged) only.push('issues');
+    // The Development view reads its data over its own JSON routes, not props.
+    if (issuesChanged && view !== 'Development') only.push('issues');
 
     return only.length > 0 ? [{ only: unique(only) }] : [];
 }
@@ -183,7 +184,7 @@ export function projectPageFallbackReloads(
                 },
             });
         }
-    } else {
+    } else if (view !== 'Development') {
         reloads.push({ only: ['issues'] });
     }
 

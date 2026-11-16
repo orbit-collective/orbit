@@ -7,12 +7,14 @@ import { useLiveChannel } from './useLiveChannel';
 import { useLiveFallback } from './useLiveFallback';
 
 /** The list and the board show the same `issues` prop, so they share one data group. */
-type DataGroup = 'issues' | 'Calendar' | 'Activity';
+type DataGroup = 'issues' | 'Calendar' | 'Activity' | 'Development';
 
 const groupOf = (view: IssuePageLooks): DataGroup =>
-    view === 'Calendar' || view === 'Activity' ? view : 'issues';
+    view === 'Calendar' || view === 'Activity' || view === 'Development'
+        ? view
+        : 'issues';
 
-const GROUPS: DataGroup[] = ['issues', 'Calendar', 'Activity'];
+const GROUPS: DataGroup[] = ['issues', 'Calendar', 'Activity', 'Development'];
 
 /** Distinct changes remembered per group; more than this collapse to one per type. */
 const MAX_MISSED = 50;
@@ -60,6 +62,7 @@ export function useProjectLive(
         issues: [],
         Calendar: [],
         Activity: [],
+        Development: [],
     });
 
     useEffect(() => {

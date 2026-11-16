@@ -33,6 +33,12 @@ const LOOKS: {
         icon: 'Activity',
         key: '4',
     },
+    {
+        look: 'Development',
+        title: 'layout_main.views.development',
+        icon: 'GitPullRequest',
+        key: '5',
+    },
 ];
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -41,8 +47,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     setSelectedLook,
     projects,
     project,
+    developmentEnabled = false,
 }) => {
     const { t } = useLaravelReactI18n();
+    // The Development view only exists for people who may open it.
+    const looks = useMemo(
+        () =>
+            LOOKS.filter(
+                ({ look }) => look !== 'Development' || developmentEnabled,
+            ),
+        [developmentEnabled],
+    );
     const commands = useMemo(
         (): Command[] => [
             {
@@ -59,7 +74,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 ],
                 perform: requestQuickAddIssue,
             },
-            ...LOOKS.map(({ look, title, icon, key }): Command => ({
+            ...looks.map(({ look, title, icon, key }): Command => ({
                 id: `view.${look.toLowerCase()}`,
                 title: t(title),
                 subtitle: project.name,
@@ -86,7 +101,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     document.getElementById('global-search-input')?.focus(),
             },
         ],
-        [project.name, setSelectedLook, t],
+        [project.name, setSelectedLook, t, looks],
     );
 
     useCommands(commands);
@@ -140,6 +155,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                             isActive: selectedLook === 'Activity',
                             onClick: () => setSelectedLook('Activity'),
                         },
+                        ...(developmentEnabled
+                            ? [
+                                  {
+                                      id: 'Development',
+                                      label: t('layout_main.tabs.development'),
+                                      icon: 'GitPullRequest' as const,
+                                      isActive: selectedLook === 'Development',
+                                      onClick: () =>
+                                          setSelectedLook('Development'),
+                                  },
+                              ]
+                            : []),
                     ]}
                 />
                 <main className={'flex flex-1 flex-col overflow-y-auto'}>

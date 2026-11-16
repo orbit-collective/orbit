@@ -191,6 +191,40 @@ function ActivityPreview({ playKey }: { playKey: number }) {
     );
 }
 
+/** Two pull request rows, each a state dot, a title bar and a CI tick. */
+const developmentPreviewRows: Array<{ dotClass: string; widthClass: string }> =
+    [
+        { dotClass: 'bg-(--success-color)', widthClass: 'w-3/5' },
+        { dotClass: 'bg-(--accent-color)', widthClass: 'w-2/5' },
+        { dotClass: 'bg-(--warning-color)', widthClass: 'w-1/2' },
+    ];
+
+function DevelopmentPreview({ playKey }: { playKey: number }) {
+    return (
+        <PreviewStage
+            playKey={playKey}
+            className="overflow-hidden rounded-lg border border-(--border-color) bg-(--overlay-color) p-2"
+        >
+            <div className="space-y-1.5">
+                {developmentPreviewRows.map((row, index) => (
+                    <PreviewBlock
+                        key={index}
+                        className="flex items-center gap-1.5 rounded-md border border-(--border-color) bg-(--surface-color) px-1.5 py-1"
+                    >
+                        <PreviewDot
+                            className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.dotClass}`}
+                        />
+                        <PreviewBar
+                            className={`h-1 rounded-full bg-(--border-color-strong) ${row.widthClass}`}
+                        />
+                        <PreviewDot className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-(--success-color)" />
+                    </PreviewBlock>
+                ))}
+            </div>
+        </PreviewStage>
+    );
+}
+
 function IssueViewPreview({
     view,
     playKey,
@@ -208,6 +242,10 @@ function IssueViewPreview({
 
     if (view === 'Activity') {
         return <ActivityPreview playKey={playKey} />;
+    }
+
+    if (view === 'Development') {
+        return <DevelopmentPreview playKey={playKey} />;
     }
 
     return <ListPreview playKey={playKey} />;
