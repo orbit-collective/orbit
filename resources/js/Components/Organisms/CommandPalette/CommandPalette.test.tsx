@@ -357,6 +357,50 @@ describe('CommandPalette', () => {
         });
     });
 
+    describe('focus when the palette closes', () => {
+        const withOutsideControls = (commands: Command[]) => {
+            render(
+                <Providers>
+                    <Harness commands={commands} />
+                    <button type="button">Other</button>
+                    <input aria-label="Outside field" />
+                </Providers>,
+            );
+
+            return userEvent.setup();
+        };
+
+        test('goes back to the control that had it', async () => {
+            const user = withOutsideControls([
+                makeCommand({ id: 'noop', title: 'Do nothing' }),
+            ]);
+            const other = screen.getByRole('button', { name: 'Other' });
+            other.focus();
+
+            open();
+            await user.click(screen.getByText('Do nothing'));
+
+            expect(other).toHaveFocus();
+        });
+
+        test('stays where the command that ran put it', async () => {
+            const user = withOutsideControls([
+                makeCommand({
+                    id: 'focus.field',
+                    title: 'Focus the field',
+                    perform: () =>
+                        screen.getByLabelText('Outside field').focus(),
+                }),
+            ]);
+            screen.getByRole('button', { name: 'Other' }).focus();
+
+            open();
+            await user.click(screen.getByText('Focus the field'));
+
+            expect(screen.getByLabelText('Outside field')).toHaveFocus();
+        });
+    });
+
     describe('mouse', () => {
         test('clicking a row runs its command', async () => {
             const user = setup(BASE);
