@@ -31,7 +31,9 @@ export const Default: Story = {
 export const Loading: Story = {
     args: { insights: null },
     play: async ({ canvasElement }) => {
-        await expect(within(canvasElement).getByRole('status')).toBeInTheDocument();
+        await expect(
+            within(canvasElement).getByRole('status'),
+        ).toBeInTheDocument();
     },
 };
 
