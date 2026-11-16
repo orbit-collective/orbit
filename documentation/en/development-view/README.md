@@ -41,3 +41,21 @@ data is never part of Inertia's live reloads. Reading needs
 `.manage` **and** a GitHub account linked to the acting user. Nothing here
 works against production data until the matching orbit-api commits are on
 its `main` branch (Netlify deploys functions from there).
+
+## Live updates
+
+`GithubDevelopmentAnnouncer::announce($projectId)` is the one place that says
+"what the view shows changed": it bumps `CacheVersion::development()` (so the
+reload that follows reads GitHub afresh) and sends a `development` change on
+the project's live channel. `GithubDevelopmentService::forget()` calls it for
+every write made from the view, and `GithubRelayEventProcessor::process()` for
+every `pull_request`, `check_suite` and `pull_request_review` relay event,
+linked to an issue or not. In the browser `live/useDevelopmentLive.ts` reloads
+the view after a short pause (a burst is one reload, the person's own changes
+are skipped); without a working socket it polls at `LIVE_POLL_INTERVAL` and
+catches up when the socket returns. What the relay never hears of (a push to
+another branch, an issue, a branch made on GitHub) cannot be announced, so a
+visible tab also sweeps everything every five minutes. To announce more, give
+the relay another event type and call the announcer from the processor; the
+App must also be subscribed to that event on GitHub.
+
