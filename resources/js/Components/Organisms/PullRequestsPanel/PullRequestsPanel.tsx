@@ -21,6 +21,14 @@ type Segment = 'open' | 'merged' | 'closed' | 'all';
 
 const SEGMENTS: readonly Segment[] = ['open', 'merged', 'closed', 'all'];
 
+/** A segment is its state's own icon (the word is its tooltip and accessible name). */
+const SEGMENT_ICONS = {
+    open: 'GitPullRequest',
+    merged: 'GitMerge',
+    closed: 'GitPullRequestClosed',
+    all: 'List',
+} as const;
+
 interface PullRequestsPanelProps {
     projectId: number;
     repositoryId: number;
@@ -157,11 +165,12 @@ export default function PullRequestsPanel({
                         setExpanded(null);
                         setPage(1);
                     }}
+                    iconOnly
                     options={SEGMENTS.map((key) => ({
                         value: key,
-                        label: `${t(`pull_requests_panel.segments.${key}`)} ${
-                            pullRequests ? counts[key] : ''
-                        }`.trim(),
+                        label: t(`pull_requests_panel.segments.${key}`),
+                        icon: SEGMENT_ICONS[key],
+                        count: pullRequests ? counts[key] : undefined,
                     }))}
                 />
             </div>
