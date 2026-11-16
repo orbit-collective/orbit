@@ -126,10 +126,16 @@ describe('DevelopmentView', () => {
         expect(axios.get).toHaveBeenCalledWith(
             '/projects.development.pull-requests.index/3',
             expect.objectContaining({
-                params: { repository_id: 1, state: 'all', per_page: 50 },
+                params: { repository_id: 1, state: 'all', per_page: 100 },
             }),
         );
-        // The commits are those of the default branch, asked once the branches are known.
+        expect(axios.get).toHaveBeenCalledWith(
+            '/projects.development.branches.index/3',
+            expect.objectContaining({
+                params: { repository_id: 1, page: 1, per_page: 6 },
+            }),
+        );
+        // The commits are those of the default branch, asked once the repository is known.
         await waitFor(() =>
             expect(axios.get).toHaveBeenCalledWith(
                 '/projects.development.commits.index/3',

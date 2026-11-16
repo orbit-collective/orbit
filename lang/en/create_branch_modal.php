@@ -10,6 +10,8 @@ return [
     'required' => 'Give the branch a name.',
     'invalid' => 'Use letters, numbers, dots, dashes, underscores and slashes, starting with a letter or number.',
     'base' => 'Start from',
+    'branches_failed' => 'Could not load the branches to start from.',
+    'branches_failed' => 'Could not load the branches to start from.',
     'cancel' => 'Cancel',
     'create' => 'Create branch',
     'creating' => 'Creating…',

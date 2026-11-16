@@ -9,7 +9,9 @@ import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatusPill from '@/Components/Atoms/StatusPill/StatusPill';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
-import BranchesPanel from '@/Components/Organisms/BranchesPanel/BranchesPanel';
+import BranchesPanel, {
+    BRANCHES_PAGE_SIZE,
+} from '@/Components/Organisms/BranchesPanel/BranchesPanel';
 import CommitsPanel from '@/Components/Organisms/CommitsPanel/CommitsPanel';
 import CreateBranchModal from '@/Components/Organisms/CreateBranchModal/CreateBranchModal';
 import DevelopmentEmptyState from '@/Components/Organisms/DevelopmentEmptyState/DevelopmentEmptyState';
@@ -116,18 +118,27 @@ function DevelopmentBoard({
         { repository_id: repository.id },
         t('development_view.insights_failed'),
     );
-    const branches = useDevelopmentResource<{ branches: DevelopmentBranch[] }>(
+    // The branches page belongs to a repository: another one starts at page 1.
+    const [branchesAt, setBranchesAt] = useState({ repository: 0, page: 1 });
+    const branchesPage =
+        branchesAt.repository === repository.id ? branchesAt.page : 1;
+    const branches = useDevelopmentResource<{
+        branches: DevelopmentBranch[];
+        total: number;
+    }>(
         route_('branches.index'),
-        { repository_id: repository.id },
+        {
+            repository_id: repository.id,
+            page: branchesPage,
+            per_page: BRANCHES_PAGE_SIZE,
+        },
         t('development_view.branches_failed'),
     );
-    const defaultBranch =
-        branches.data?.branches.find((branch) => branch.isDefault)?.name ??
-        null;
+    const defaultBranch = insights.data?.repository.defaultBranch ?? null;
     const commits = useDevelopmentResource<{ commits: DevelopmentCommit[] }>(
         route_('commits.index'),
         // Waits for the default branch so the list is of that branch, not of "whatever".
-        branches.data
+        insights.data
             ? {
                   repository_id: repository.id,
                   branch: defaultBranch ?? undefined,
@@ -319,6 +330,11 @@ function DevelopmentBoard({
                     <RepositoryInsights insights={insights.data} />
                     <BranchesPanel
                         branches={branches.data?.branches ?? null}
+                        total={branches.data?.total ?? 0}
+                        page={branchesPage}
+                        onPageChange={(page) =>
+                            setBranchesAt({ repository: repository.id, page })
+                        }
                         error={branches.error}
                         onRetry={branches.reload}
                         onCreate={
@@ -339,8 +355,9 @@ function DevelopmentBoard({
 
             {creatingBranch && (
                 <CreateBranchModal
+                    projectId={project.id}
+                    repositoryId={repository.id}
                     repositoryName={repositoryLabel(repository)}
-                    branches={branches.data?.branches ?? []}
                     busy={actions.busy}
                     onCreate={actions.createBranch}
                     onClose={() => setCreatingBranch(false)}

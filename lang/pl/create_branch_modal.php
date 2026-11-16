@@ -10,6 +10,8 @@ return [
     'required' => 'Nadaj gałęzi nazwę.',
     'invalid' => 'Użyj liter, cyfr, kropek, myślników, podkreśleń i ukośników, zaczynając od litery lub cyfry.',
     'base' => 'Zacznij od',
+    'branches_failed' => 'Nie udało się wczytać gałęzi, od których można zacząć.',
+    'branches_failed' => 'Nie udało się wczytać gałęzi, od których można zacząć.',
     'cancel' => 'Anuluj',
     'create' => 'Utwórz gałąź',
     'creating' => 'Tworzenie…',

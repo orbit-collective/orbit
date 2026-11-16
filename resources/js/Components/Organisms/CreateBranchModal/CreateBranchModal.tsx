@@ -3,8 +3,10 @@ import { FormEvent, useId, useMemo, useRef, useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import { inputVariants } from '@/Components/Atoms/Input/Input';
 import Modal from '@/Components/Atoms/Modal/Modal';
+import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
+import { useDevelopmentResource } from '@/hooks/useDevelopmentResource';
 import { useDialogFocus } from '@/hooks/useDialogFocus';
 import { DevelopmentBranch } from '@/types/Development';
 import { cn } from '@/utils/cn';
@@ -16,8 +18,9 @@ export const isValidBranchName = (name: string): boolean =>
     VALID_BRANCH_NAME.test(name) && !name.includes('..');
 
 interface CreateBranchModalProps {
+    projectId: number;
+    repositoryId: number;
     repositoryName: string;
-    branches: DevelopmentBranch[];
     busy: boolean;
     /** Resolves true when the branch was created (the modal then closes). */
     onCreate: (name: string, baseBranch: string | null) => Promise<boolean>;
@@ -26,8 +29,9 @@ interface CreateBranchModalProps {
 
 /** Starts a branch from any existing one (the default branch is preselected). */
 export default function CreateBranchModal({
+    projectId,
+    repositoryId,
     repositoryName,
-    branches,
     busy,
     onCreate,
     onClose,
@@ -38,10 +42,22 @@ export default function CreateBranchModal({
     const errorId = useId();
     const [name, setName] = useState('');
     const [touched, setTouched] = useState(false);
-    const defaultBranch = branches.find((branch) => branch.isDefault)?.name;
-    const [base, setBase] = useState<string | null>(
-        defaultBranch ?? branches[0]?.name ?? null,
+    // The branches to start from are read here, a hundred at most (GitHub's
+    // page), default first: the view itself only holds one short page of them.
+    const { data, loading } = useDevelopmentResource<{
+        branches: DevelopmentBranch[];
+    }>(
+        route('projects.development.branches.index', { project: projectId }),
+        { repository_id: repositoryId, per_page: 100 },
+        t('create_branch_modal.branches_failed'),
     );
+    const branches = useMemo(() => data?.branches ?? [], [data]);
+    const [chosen, setChosen] = useState<string | null>(null);
+    const base =
+        chosen ??
+        branches.find((branch) => branch.isDefault)?.name ??
+        branches[0]?.name ??
+        null;
     const options = useMemo(
         () =>
             branches.map((branch) => ({
@@ -122,6 +138,9 @@ export default function CreateBranchModal({
                             </p>
                         )}
                     </div>
+                    {loading && options.length === 0 && (
+                        <Skeleton className="h-9 w-full rounded-md" />
+                    )}
                     {options.length > 0 && (
                         <div className="space-y-1.5">
                             <span className="block text-xs font-medium text-(--text-gray-color)">
@@ -132,7 +151,7 @@ export default function CreateBranchModal({
                                 placeholder={t('create_branch_modal.base')}
                                 options={options}
                                 value={base ?? ''}
-                                onChange={setBase}
+                                onChange={setChosen}
                             />
                         </div>
                     )}

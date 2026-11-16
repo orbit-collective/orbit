@@ -1,19 +1,23 @@
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useState } from 'react';
-import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import BranchItem from '@/Components/Molecules/BranchItem/BranchItem';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
+import ListPager from '@/Components/Molecules/ListPager/ListPager';
 import { DevelopmentBranch } from '@/types/Development';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
 
-export const BRANCHES_SHOWN = 6;
+/** Branches per page: a short list that stays in view instead of a scroll. */
+export const BRANCHES_PAGE_SIZE = 6;
 
 interface BranchesPanelProps {
-    /** `null` until the first answer. */
+    /** The branches of the current page; `null` until that page's answer is there. */
     branches: DevelopmentBranch[] | null;
+    /** Every branch of the repository, for the pager (0 until the first answer). */
+    total: number;
+    page: number;
+    onPageChange: (page: number) => void;
     error: string | null;
     onRetry: () => void;
     /** Present when the user may create branches; the button opens the dialog. */
@@ -23,14 +27,14 @@ interface BranchesPanelProps {
 /** The repository's branches, default first, with a way to start a new one. */
 export default function BranchesPanel({
     branches,
+    total,
+    page,
+    onPageChange,
     error,
     onRetry,
     onCreate,
 }: BranchesPanelProps) {
     const { t } = useLaravelReactI18n();
-    const [all, setAll] = useState(false);
-    const shown = all ? branches : branches?.slice(0, BRANCHES_SHOWN);
-    const hidden = (branches?.length ?? 0) - BRANCHES_SHOWN;
 
     return (
         <section
@@ -71,39 +75,40 @@ export default function BranchesPanel({
                             {t('branches_panel.retry')}
                         </button>
                     </p>
-                ) : !shown ? (
+                ) : !branches ? (
                     <div role="status" aria-label={t('branches_panel.loading')}>
-                        <Skeleton className="my-2 h-4 w-full" />
-                        <Skeleton index={1} className="my-2 h-4 w-3/4" />
+                        {Array.from(
+                            { length: BRANCHES_PAGE_SIZE },
+                            (_, index) => (
+                                <Skeleton
+                                    key={index}
+                                    index={index}
+                                    className="my-3 h-4 w-full"
+                                />
+                            ),
+                        )}
                     </div>
-                ) : shown.length === 0 ? (
+                ) : branches.length === 0 ? (
                     <p className="text-sm text-(--text-gray-color)">
                         {t('branches_panel.empty')}
                     </p>
                 ) : (
                     <ul className="m-0 list-none divide-y divide-(--border-color) p-0">
-                        {shown.map((branch) => (
+                        {branches.map((branch) => (
                             <BranchItem key={branch.name} branch={branch} />
                         ))}
                     </ul>
                 )}
             </div>
 
-            {branches && hidden > 0 && (
-                <button
-                    type="button"
-                    aria-expanded={all}
-                    onClick={() => setAll((value) => !value)}
-                    className={cn(
-                        'mt-2 flex cursor-pointer items-center gap-1 rounded-sm border-none bg-transparent text-xs text-(--accent-color) hover:underline',
-                        FOCUS_RING,
-                    )}
-                >
-                    <Icon name={all ? 'ChevronUp' : 'ChevronDown'} size={12} />
-                    {all
-                        ? t('branches_panel.show_less')
-                        : t('branches_panel.show_more', { count: hidden })}
-                </button>
+            {branches && (
+                <ListPager
+                    label={t('branches_panel.pager')}
+                    page={page}
+                    pageSize={BRANCHES_PAGE_SIZE}
+                    total={total}
+                    onPageChange={onPageChange}
+                />
             )}
         </section>
     );

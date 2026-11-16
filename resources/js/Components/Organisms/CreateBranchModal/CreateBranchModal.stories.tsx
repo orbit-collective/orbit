@@ -6,17 +6,29 @@ import CreateBranchModal from './CreateBranchModal';
 const meta = {
     title: 'Organisms/CreateBranchModal',
     component: CreateBranchModal,
-    parameters: { layout: 'fullscreen' },
-    args: {
-        repositoryName: 'orbit-collective/orbit',
-        branches: [
-            buildBranch(),
-            buildBranch({
-                name: 'develop',
-                isDefault: false,
-                protected: false,
-            }),
+    parameters: {
+        layout: 'fullscreen',
+        network: [
+            {
+                url: /branches\.index/,
+                response: {
+                    branches: [
+                        buildBranch(),
+                        buildBranch({
+                            name: 'develop',
+                            isDefault: false,
+                            protected: false,
+                        }),
+                    ],
+                    total: 2,
+                },
+            },
         ],
+    },
+    args: {
+        projectId: 1,
+        repositoryId: 1,
+        repositoryName: 'orbit-collective/orbit',
         busy: false,
         onCreate: async () => true,
         onClose: () => {},

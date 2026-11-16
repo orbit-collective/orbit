@@ -1,7 +1,17 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import axios from 'axios';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { buildBranch } from '@/tests/development';
+vi.mock('axios');
+vi.stubGlobal(
+    'route',
+    vi.fn(
+        (name: string, params: Record<string, number>) =>
+            `/${name}/${Object.values(params).join('/')}`,
+    ),
+);
+
 import CreateBranchModal, { isValidBranchName } from './CreateBranchModal';
 
 const branches = [
@@ -13,8 +23,9 @@ const renderModal = (
     overrides: Partial<Parameters<typeof CreateBranchModal>[0]> = {},
 ) => {
     const props = {
+        projectId: 3,
+        repositoryId: 9,
         repositoryName: 'orbit-collective/orbit',
-        branches,
         busy: false,
         onCreate: vi.fn().mockResolvedValue(true),
         onClose: vi.fn(),
@@ -36,6 +47,13 @@ describe('isValidBranchName', () => {
     ])('%s -> %s', (name, valid) => {
         expect(isValidBranchName(name)).toBe(valid);
     });
+});
+
+beforeEach(() => {
+    vi.mocked(axios.get)
+        .mockReset()
+        .mockResolvedValue({ data: { branches, total: 2 } });
+    vi.mocked(axios.isCancel).mockReturnValue(false);
 });
 
 describe('CreateBranchModal', () => {
@@ -116,8 +134,27 @@ describe('CreateBranchModal', () => {
         ).toBeDisabled();
     });
 
+    test('reads up to a hundred branches of the repository to start from, with a skeleton meanwhile', async () => {
+        renderModal();
+
+        expect(screen.getByTestId('skeleton')).toBeInTheDocument();
+        await waitFor(() =>
+            expect(screen.queryByTestId('skeleton')).not.toBeInTheDocument(),
+        );
+        expect(screen.queryByTestId('skeleton')).not.toBeInTheDocument();
+        expect(axios.get).toHaveBeenCalledWith(
+            '/projects.development.branches.index/3',
+            expect.objectContaining({
+                params: { repository_id: 9, per_page: 100 },
+            }),
+        );
+    });
+
     test('works without any branch to start from', async () => {
-        const { props } = renderModal({ branches: [] });
+        vi.mocked(axios.get).mockResolvedValue({
+            data: { branches: [], total: 0 },
+        });
+        const { props } = renderModal();
 
         await userEvent.type(screen.getByLabelText('Branch name'), 'feat/x');
         await userEvent.click(
