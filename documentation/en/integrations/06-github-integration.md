@@ -175,9 +175,13 @@ hidden marker in the PR's description:
 - **Exactly one marker** → that issue is resolved and linked, as long
   as it belongs to the same Orbit project the GitHub integration is
   connected to. An issue from a different project is never linked.
-- **Two or more markers** → treated as ambiguous. Nothing is linked,
-  and the ambiguity is logged for diagnostics. This is a permanent
-  outcome, not a transient failure — the event is still acknowledged.
+- **Two or more markers** → the pull request is linked to *every*
+  issue they name (one `external_issue_links` row per issue, unique per
+  `(project_integration_id, external_id, issue_id)`), with a single bot
+  comment listing them all. A marker whose issue is missing or belongs
+  to another project is dropped on its own; the event is skipped only
+  when none resolves. `reopened`/`closed`/`synchronize`, check and
+  review events then update every linked issue.
 
 There is no fallback: no title, branch, or commit-message parsing.
 See `App\Services\Integrations\Github\GithubMarkerParser`.

@@ -181,10 +181,14 @@ jest ukryty znacznik w opisie PR-a:
   łączone, o ile należy do tego samego projektu w Orbicie, z którym
   połączona jest integracja GitHub. Issue z innego projektu nigdy nie
   zostanie powiązane.
-- **Dwa lub więcej znaczników** → traktowane jako niejednoznaczne. Nic
-  nie zostaje powiązane, a niejednoznaczność jest logowana
-  diagnostycznie. To wynik trwały, a nie przejściowy błąd — event i
-  tak zostaje potwierdzony (ACK).
+- **Dwa lub więcej znaczników** → pull request zostaje powiązany z
+  *każdym* wskazanym issue (jeden wiersz `external_issue_links` na
+  issue, unikalny per `(project_integration_id, external_id,
+  issue_id)`), z jednym komentarzem bota wymieniającym je wszystkie.
+  Znacznik, którego issue nie istnieje lub należy do innego projektu,
+  jest pomijany osobno; event jest pomijany dopiero, gdy żaden się nie
+  rozwiąże. Eventy `reopened`/`closed`/`synchronize`, check i review
+  aktualizują potem każde powiązane issue.
 
 Nie ma żadnego fallbacku: brak parsowania tytułu, brancha czy
 wiadomości commitów. Zobacz

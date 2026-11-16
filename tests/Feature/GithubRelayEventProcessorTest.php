@@ -162,13 +162,46 @@ test('no marker is skipped without creating a link or a comment', function () {
     Http::assertNotSent(fn ($request) => str_contains($request->url(), '/v1/github/comments'));
 });
 
-test('multiple markers are skipped and never link the first one', function () {
+test('several markers link the pull request to every issue with one comment', function () {
+    fakeSuccessfulComment();
+    $first = Issue::factory()->create(['project_id' => $this->project->id]);
+    $second = Issue::factory()->create(['project_id' => $this->project->id]);
+
+    $outcome = $this->processor->process(makeRelayEvent("<!-- orbit-issue:{$first->id} --> <!-- orbit-issue:{$second->id} -->"), $this->projectIntegration);
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Linked);
+    expect(ExternalIssueLink::query()->pluck('issue_id')->sort()->values()->all())->toBe([$first->id, $second->id]);
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($request) => str_contains($request['body'], "#$first->number") && str_contains($request['body'], "#$second->number"));
+});
+
+test('a marker that does not resolve is dropped while the others still link', function () {
+    fakeSuccessfulComment();
     $issue = Issue::factory()->create(['project_id' => $this->project->id]);
 
-    $outcome = $this->processor->process(makeRelayEvent("<!-- orbit-issue:{$issue->id} --> <!-- orbit-issue:999 -->"), $this->projectIntegration);
+    $outcome = $this->processor->process(makeRelayEvent("<!-- orbit-issue:{$issue->id} --> <!-- orbit-issue:999999 -->"), $this->projectIntegration);
 
-    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
-    expect(ExternalIssueLink::query()->count())->toBe(0);
+    expect($outcome)->toBe(GithubRelayEventOutcome::Linked);
+    expect(ExternalIssueLink::query()->pluck('issue_id')->all())->toBe([$issue->id]);
+});
+
+test('lifecycle, check and review events update every linked issue', function () {
+    fakeSuccessfulComment();
+    $first = Issue::factory()->create(['project_id' => $this->project->id]);
+    $second = Issue::factory()->create(['project_id' => $this->project->id]);
+    $this->processor->process(makeRelayEvent("<!-- orbit-issue:{$first->id} --> <!-- orbit-issue:{$second->id} -->"), $this->projectIntegration);
+
+    $closed = makeRelayEvent('', action: 'closed', state: 'closed', merged: true, mergedAt: '2026-09-25T00:00:00Z', updatedAt: '2026-09-25T00:00:00Z');
+    expect($this->processor->process($closed, $this->projectIntegration))->toBe(GithubRelayEventOutcome::Synced);
+    expect(ExternalIssueLink::query()->pluck('status')->unique()->all())->toBe(['merged']);
+
+    $this->processor->process(makeCheckSuiteEvent(4580098240, 'passed'), $this->projectIntegration);
+    expect(ExternalIssueLink::query()->pluck('check_status')->unique()->all())->toBe(['passed']);
+
+    // A stale lifecycle event is skipped for every link.
+    $stale = makeRelayEvent('', action: 'reopened', updatedAt: '2026-09-24T12:00:00Z');
+    expect($this->processor->process($stale, $this->projectIntegration))->toBe(GithubRelayEventOutcome::Skipped);
+    expect(ExternalIssueLink::query()->pluck('status')->unique()->all())->toBe(['merged']);
 });
 
 test('a missing issue is skipped', function () {
