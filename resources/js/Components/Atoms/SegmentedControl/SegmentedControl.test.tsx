@@ -160,4 +160,35 @@ describe('SegmentedControl', () => {
 
         expect(screen.getAllByTestId('segment-pill')).toHaveLength(2);
     });
+
+    test('with iconOnly an option can carry a count, shown beside the icon and read with the name', async () => {
+        const onChange = vi.fn();
+        render(
+            <SegmentedControl
+                label="Filter"
+                value="open"
+                onChange={onChange}
+                iconOnly
+                options={[
+                    {
+                        value: 'open',
+                        label: 'Open',
+                        icon: 'GitPullRequest',
+                        count: 4,
+                    },
+                    { value: 'all', label: 'All', icon: 'List' },
+                ]}
+            />,
+        );
+
+        const open = screen.getByRole('button', { name: 'Open 4' });
+        expect(open).toHaveTextContent('4');
+        expect(open).toHaveAttribute('title', 'Open 4');
+        expect(
+            screen.getByRole('button', { name: 'All' }),
+        ).not.toHaveTextContent(/\d/);
+
+        await userEvent.click(screen.getByRole('button', { name: 'All' }));
+        expect(onChange).toHaveBeenCalledWith('all');
+    });
 });

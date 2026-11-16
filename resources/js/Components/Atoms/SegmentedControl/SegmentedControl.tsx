@@ -10,7 +10,13 @@ interface SegmentedControlProps<T extends string | number> {
     /** Names the group for assistive technology. */
     label: string;
     value: T;
-    options: { value: T; label: string; icon?: keyof typeof icons }[];
+    options: {
+        value: T;
+        label: string;
+        icon?: keyof typeof icons;
+        /** A number shown next to the icon of an icon-only option (and read out with its label). */
+        count?: number;
+    }[];
     onChange: (value: T) => void;
     /** Stretch the segments over the whole row. */
     fullWidth?: boolean;
@@ -57,8 +63,20 @@ function SegmentedControl<T extends string | number>({
                         key={option.value}
                         type="button"
                         aria-pressed={active}
-                        aria-label={iconShown ? option.label : undefined}
-                        title={iconShown ? option.label : undefined}
+                        aria-label={
+                            iconShown
+                                ? option.count === undefined
+                                    ? option.label
+                                    : `${option.label} ${option.count}`
+                                : undefined
+                        }
+                        title={
+                            iconShown
+                                ? option.count === undefined
+                                    ? option.label
+                                    : `${option.label} ${option.count}`
+                                : undefined
+                        }
                         onClick={() => onChange(option.value)}
                         className={cn(
                             'relative cursor-pointer rounded-md border-none bg-transparent px-2.5 py-1 text-xs font-medium transition-colors duration-150',
@@ -79,11 +97,14 @@ function SegmentedControl<T extends string | number>({
                             />
                         )}
                         {iconShown ? (
-                            <Icon
-                                name={option.icon!}
-                                size={14}
-                                className="relative"
-                            />
+                            <span className="relative flex items-center gap-1">
+                                <Icon name={option.icon!} size={14} />
+                                {option.count !== undefined && (
+                                    <span className="text-[10px] leading-none tabular-nums">
+                                        {option.count}
+                                    </span>
+                                )}
+                            </span>
                         ) : (
                             <span className="relative">{option.label}</span>
                         )}
