@@ -33,6 +33,12 @@ enum Permission: string
     /** Creating a branch or pull request from an issue's Development panel - separate from ISSUES_UPDATE since it triggers real GitHub App API calls, not just an Orbit-side edit. */
     case GITHUB_DEVELOPMENT_CREATE = 'projects.github.development.create';
 
+    /** Opening the project's Development view: pull requests, commits, branches, CI and repository statistics read from GitHub. */
+    case GITHUB_DEVELOPMENT_VIEW = 'projects.github.development.view';
+
+    /** Closing/reopening a pull request and linking or unlinking issues from the Development view - real GitHub App writes, so separate from the view. */
+    case GITHUB_DEVELOPMENT_MANAGE = 'projects.github.development.manage';
+
     case LABELS_VIEW = 'projects.labels.view';
     case LABELS_CREATE = 'projects.labels.create';
     case LABELS_UPDATE = 'projects.labels.update';

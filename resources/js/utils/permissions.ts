@@ -89,6 +89,16 @@ const PERMISSION_META: Record<string, PermissionMeta> = {
         description:
             "Create a GitHub branch or pull request from an issue's Development panel.",
     },
+    'projects.github.development.view': {
+        label: 'View development',
+        description:
+            'Open the Development view: pull requests, commits, branches, CI status and repository statistics.',
+    },
+    'projects.github.development.manage': {
+        label: 'Manage development',
+        description:
+            'Close or reopen pull requests and link issues to them from the Development view.',
+    },
     'projects.priorities.view': {
         label: 'View priorities',
         description: "See the project's priority scale.",

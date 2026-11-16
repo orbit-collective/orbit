@@ -83,6 +83,14 @@ return [
         'label' => 'Create branches & pull requests',
         'description' => 'Create a GitHub branch or pull request from an issue\'s Development panel.',
     ],
+    'projects_github_development_view' => [
+        'label' => 'View development',
+        'description' => 'Open the Development view: pull requests, commits, branches, CI status and repository statistics.',
+    ],
+    'projects_github_development_manage' => [
+        'label' => 'Manage development',
+        'description' => 'Close or reopen pull requests and link issues to them from the Development view.',
+    ],
     'projects_priorities_view' => [
         'label' => 'View priorities',
         'description' => 'See the project\'s priority scale.',
