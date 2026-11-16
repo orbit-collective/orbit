@@ -1,5 +1,50 @@
 # Changelog
 
+## [0.15.4](https://github.com/orbit-collective/orbit/compare/v0.15.3...v0.15.4) (2026-11-16)
+
+
+### Features
+
+* **integrations:** a filters toggle and a list or grid layout ([cb8a186](https://github.com/orbit-collective/orbit/commit/cb8a1863f4ce969b36ed65cddbdb41d0535cf534))
+* **integrations:** add a row variant to the integration card ([0695174](https://github.com/orbit-collective/orbit/commit/069517468040635e310e5502801328caf3da8526))
+* **integrations:** add catalog ids and a cheap github check ([dc7c8aa](https://github.com/orbit-collective/orbit/commit/dc7c8aa5bab70baa1c215f70364999a8828013fa))
+* **integrations:** add command palette commands ([fdeb80a](https://github.com/orbit-collective/orbit/commit/fdeb80ad39128f0ede4e607280319b50721ad58f))
+* **integrations:** add full bleed option to integration detail ([a9eb7a8](https://github.com/orbit-collective/orbit/commit/a9eb7a8d769c53e5ae9e904122d4ad1dffed12d2))
+* **integrations:** add search and state filter helpers ([30b1cab](https://github.com/orbit-collective/orbit/commit/30b1cab131be45c07dcd070682a67323c7262352))
+* **integrations:** link each card to its own page ([7e9b2cf](https://github.com/orbit-collective/orbit/commit/7e9b2cf076ebedbf1fd6808de890dc2ae8b5c952))
+* **integrations:** link import notifications to the page ([37af468](https://github.com/orbit-collective/orbit/commit/37af4685c20efdd000bbed5b1ca6a1809dda18f0))
+* **integrations:** replace the modal with a page ([6be2305](https://github.com/orbit-collective/orbit/commit/6be2305acebc7e65f08ad4c5b575839586fb9d7c))
+* **integrations:** search and filter the overview ([cc6e3c7](https://github.com/orbit-collective/orbit/commit/cc6e3c7de49c83558381f2f9fe75e8a606c1b516))
+* **settings:** support pages below a settings tab ([f025e9f](https://github.com/orbit-collective/orbit/commit/f025e9fb6f7464034a95a46776e347169a392531))
+* **ui:** add a DetailsTable molecule ([7b205da](https://github.com/orbit-collective/orbit/commit/7b205da3d8644563a66d9c17fe67bc65439678b9))
+* **ui:** icon-only segments and a stored choice hook ([ef15c55](https://github.com/orbit-collective/orbit/commit/ef15c55bfc6d3ea25c2909b4196c3c309b479f66))
+* **ui:** pass an accessible name through the Input ([c4359ac](https://github.com/orbit-collective/orbit/commit/c4359ac493d274b5d1fb02586e583fe9da6e77d3))
+
+
+### Bug Fixes
+
+* **integrations:** align the switch in the list rows ([a1c5e10](https://github.com/orbit-collective/orbit/commit/a1c5e10c34e6eebc6a59ec8e08f2a3b1f0d4f1f7))
+* **integrations:** keep an integration page's state per project ([2e2ad5a](https://github.com/orbit-collective/orbit/commit/2e2ad5a5be8cbfe7c0247115fb2b2756b0b261a6))
+* **integrations:** lay the grid out in columns of a capped width ([ffe81dd](https://github.com/orbit-collective/orbit/commit/ffe81dd4e8c9958d383620699d55defc7d664944))
+* **integrations:** let the search and status filter wrap ([543d553](https://github.com/orbit-collective/orbit/commit/543d553a09a8b130dbfc3a95c20a67369be433be))
+* **integrations:** put the page commands under Suggested ([5ea9426](https://github.com/orbit-collective/orbit/commit/5ea9426ffb3434a942dfed3c33dce19862be904f))
+* **integrations:** read only the requested integration's settings ([c7b3bfc](https://github.com/orbit-collective/orbit/commit/c7b3bfc52a950d3e4775c80604011412387b2652))
+* **integrations:** reload the enabled flag with the GitHub status ([79ce651](https://github.com/orbit-collective/orbit/commit/79ce651f14ded88a9db28aa80c3a6e15d2345e91))
+* **integrations:** stop the commands re-registering in a loop ([885383c](https://github.com/orbit-collective/orbit/commit/885383c76492768031dfbbd3e2ecdd1bf0329471))
+* **integrations:** tidy the keyboard and screen reader cues ([a34e3f7](https://github.com/orbit-collective/orbit/commit/a34e3f73e6ed77c793e8c86c50eac45d09f58b90))
+* **ui:** keep the focus a palette command moved ([c9bcd9a](https://github.com/orbit-collective/orbit/commit/c9bcd9ae41d02c32f648772b036a1ab5bce3d543))
+* **ui:** stop hover from scrolling the palette list ([c0859c2](https://github.com/orbit-collective/orbit/commit/c0859c2efa38345175bfc88846e7e22e33ac3823))
+
+
+### Performance Improvements
+
+* **integrations:** give each integration its own page ([349b1fc](https://github.com/orbit-collective/orbit/commit/349b1fc19dad89c16182ff8dc026275684345921))
+
+
+### Miscellaneous Chores
+
+* release 0.15.4 ([db3bf7b](https://github.com/orbit-collective/orbit/commit/db3bf7b828ddebbbc681fb6f5f43e8bfd27864b3))
+
 ## [0.15.3](https://github.com/orbit-collective/orbit/compare/v0.15.2...v0.15.3) (2026-11-15)
 
 
