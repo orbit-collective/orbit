@@ -306,6 +306,28 @@ class OrbitRelayClient
         );
     }
 
+    /**
+     * One page of the repository's GitHub issues (not its pull requests),
+     * newest update first, optionally since a date.
+     *
+     * @return array{issues: list<array<string, mixed>>, hasMore: bool}
+     */
+    public function listIssues(string $relayToken, int $repositoryId, string $state, int $page, int $perPage, ?string $since = null): array
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/issues', array_filter([
+                'repositoryId' => $repositoryId,
+                'state' => $state,
+                'page' => $page,
+                'perPage' => $perPage,
+                'since' => $since,
+            ], fn ($value) => $value !== null)),
+            'GET /v1/github/issues',
+        );
+
+        return ['issues' => $data['issues'], 'hasMore' => $data['hasMore'] ?? false];
+    }
+
     /** @return list<array<string, mixed>> */
     public function listCommits(string $relayToken, int $repositoryId, ?string $branch, int $page, int $perPage): array
     {

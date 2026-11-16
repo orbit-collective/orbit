@@ -62,6 +62,28 @@ class GithubDevelopmentController extends Controller
         ));
     }
 
+    public function githubIssues(Request $request, Project $project): JsonResponse
+    {
+        $this->authorize('viewGithubDevelopment', $project);
+
+        $data = $request->validate([
+            'repository_id' => 'required|integer|min:1',
+            'state' => ['sometimes', Rule::in(['open', 'closed', 'all'])],
+            'since' => 'sometimes|nullable|date_format:Y-m-d',
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:'.self::MAX_PER_PAGE,
+        ]);
+
+        return response()->json($this->developmentService->githubIssues(
+            $project,
+            $data['repository_id'],
+            $data['state'] ?? 'open',
+            $data['page'] ?? 1,
+            $data['per_page'] ?? 30,
+            $data['since'] ?? null,
+        ));
+    }
+
     public function pullRequest(Request $request, Project $project, int $number): JsonResponse
     {
         $this->authorize('viewGithubDevelopment', $project);
