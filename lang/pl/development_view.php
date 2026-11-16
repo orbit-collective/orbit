@@ -14,5 +14,6 @@ return [
     'pull_requests_failed' => 'Nie udało się wczytać pull requestów z GitHuba.',
     'insights_failed' => 'Nie udało się wczytać statystyk repozytorium.',
     'branches_failed' => 'Nie udało się wczytać gałęzi.',
+    'issues_failed' => 'Nie udało się wczytać zgłoszeń GitHub.',
     'commits_failed' => 'Nie udało się wczytać commitów.',
 ];

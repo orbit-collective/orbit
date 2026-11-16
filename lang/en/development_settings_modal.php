@@ -32,6 +32,7 @@ return [
     'sections_hint' => 'A hidden section is not shown and not read from GitHub, which makes the view lighter.',
     'section' => [
         'stats' => 'Statistics',
+        'issues' => 'GitHub issues',
         'insights' => 'Activity, contributors and languages',
         'branches' => 'Branches',
         'commits' => 'Latest commits',

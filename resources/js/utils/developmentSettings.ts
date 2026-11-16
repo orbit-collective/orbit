@@ -18,10 +18,16 @@ export const ACTIVITY_WEEK_CHOICES = [4, 12, 26, 52] as const;
 
 export const COMMIT_CHOICES = [5, 8, 15, 30] as const;
 
-export type DevelopmentSection = 'stats' | 'insights' | 'branches' | 'commits';
+export type DevelopmentSection =
+    | 'stats'
+    | 'issues'
+    | 'insights'
+    | 'branches'
+    | 'commits';
 
 export const SECTIONS: readonly DevelopmentSection[] = [
     'stats',
+    'issues',
     'insights',
     'branches',
     'commits',
@@ -33,6 +39,7 @@ export interface DevelopmentSettings {
     /** The most pull requests read for that range. */
     pullRequestLimit: number;
     pullRequestsPerPage: number;
+    issuesPerPage: number;
     branchesPerPage: number;
     activityWeeks: number;
     commitsShown: number;
@@ -44,10 +51,17 @@ export const DEFAULT_SETTINGS: DevelopmentSettings = {
     range: '90d',
     pullRequestLimit: 250,
     pullRequestsPerPage: 10,
+    issuesPerPage: 5,
     branchesPerPage: 5,
     activityWeeks: 12,
     commitsShown: 8,
-    sections: { stats: true, insights: true, branches: true, commits: true },
+    sections: {
+        stats: true,
+        issues: true,
+        insights: true,
+        branches: true,
+        commits: true,
+    },
 };
 
 export const SETTINGS_STORAGE_KEY = 'developmentSettings';
@@ -78,6 +92,11 @@ export function normalizeSettings(raw: unknown): DevelopmentSettings {
             stored.pullRequestsPerPage,
             PAGE_SIZES,
             DEFAULT_SETTINGS.pullRequestsPerPage as 10,
+        ),
+        issuesPerPage: oneOf(
+            stored.issuesPerPage,
+            PAGE_SIZES,
+            DEFAULT_SETTINGS.issuesPerPage as 5,
         ),
         branchesPerPage: oneOf(
             stored.branchesPerPage,
