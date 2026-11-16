@@ -258,3 +258,43 @@ test('a connect timeout is reported as a timeout too, since the relay did not re
         expect($exception->isTimeout)->toBeTrue();
     }
 });
+
+test('the development reads send their query and unwrap the envelope', function () {
+    Http::fake([
+        '*/v1/github/pull-requests*' => Http::response(['success' => true, 'data' => ['pullRequests' => [['number' => 1]]]]),
+        '*/v1/github/commits*' => Http::response(['success' => true, 'data' => ['commits' => [['sha' => 'a']]]]),
+        '*/v1/github/branches*' => Http::response(['success' => true, 'data' => ['branches' => [['name' => 'main']]]]),
+        '*/v1/github/checks*' => Http::response(['success' => true, 'data' => ['state' => 'passed']]),
+        '*/v1/github/insights*' => Http::response(['success' => true, 'data' => ['contributors' => []]]),
+    ]);
+
+    expect($this->client->listPullRequests('tok', 5, 'open', 2, 10))->toBe([['number' => 1]])
+        ->and($this->client->listCommits('tok', 5, 'feat', 1, 30))->toBe([['sha' => 'a']])
+        ->and($this->client->listBranches('tok', 5))->toBe([['name' => 'main']])
+        ->and($this->client->getChecks('tok', 5, 'abc'))->toBe(['state' => 'passed'])
+        ->and($this->client->getInsights('tok', 5))->toBe(['contributors' => []]);
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'pull-requests?') && str_contains($request->url(), 'repositoryId=5&state=open&page=2&perPage=10'));
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'commits') && str_contains($request->url(), 'branch=feat'));
+});
+
+test('listCommits leaves the branch out when there is none', function () {
+    Http::fake(['*/v1/github/commits*' => Http::response(['success' => true, 'data' => ['commits' => []]])]);
+
+    $this->client->listCommits('tok', 5, null, 1, 30);
+
+    Http::assertSent(fn ($request) => ! str_contains($request->url(), 'branch'));
+});
+
+test('getPullRequest asks for one number and updatePullRequest posts only the changes', function () {
+    Http::fake([
+        '*/v1/github/pull-request-update' => Http::response(['success' => true, 'data' => ['number' => 7, 'state' => 'closed']]),
+        '*/v1/github/pull-requests*' => Http::response(['success' => true, 'data' => ['number' => 7]]),
+    ]);
+
+    expect($this->client->getPullRequest('tok', 5, 7))->toBe(['number' => 7])
+        ->and($this->client->updatePullRequest('tok', 5, 7, ['state' => 'closed']))->toBe(['number' => 7, 'state' => 'closed']);
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'pull-requests?') && str_contains($request->url(), 'number=7'));
+    Http::assertSent(fn ($request) => str_ends_with($request->url(), '/pull-request-update') && $request->data() === ['repositoryId' => 5, 'number' => 7, 'state' => 'closed']);
+});

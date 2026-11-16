@@ -35,6 +35,27 @@ class ExternalIssueLinkRepository
             ->get();
     }
 
+    /**
+     * The links of a set of pull requests of one integration, by their
+     * `owner/name#number` key, with each link's issue - what the
+     * Development view shows next to every pull request.
+     *
+     * @param  list<string>  $externalKeys
+     * @return Collection<int, ExternalIssueLink>
+     */
+    public function getForPullRequestKeys(ProjectIntegration $projectIntegration, array $externalKeys): Collection
+    {
+        if ($externalKeys === []) {
+            return new Collection;
+        }
+
+        return $projectIntegration->externalIssueLinks()
+            ->where('external_type', 'github_pull_request')
+            ->whereIn('external_key', $externalKeys)
+            ->with('issue')
+            ->get();
+    }
+
     public function delete(ExternalIssueLink $externalIssueLink): void
     {
         $externalIssueLink->delete();

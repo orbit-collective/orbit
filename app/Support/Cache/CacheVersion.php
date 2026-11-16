@@ -28,6 +28,12 @@ final class CacheVersion
     /** A user's name or avatar changed, or a user was deleted (shown on issues). */
     public const string USERS = 'users';
 
+    /** What a project's Development view read from GitHub; bumped by every write the view (or a relay event) makes. */
+    public static function development(int $projectId): string
+    {
+        return "development:$projectId";
+    }
+
     public static function project(int $projectId): string
     {
         return "project:$projectId";

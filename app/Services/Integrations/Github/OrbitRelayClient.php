@@ -227,6 +227,103 @@ class OrbitRelayClient
         return GithubIdentityDTO::fromResponse($data);
     }
 
+    /**
+     * The Development view's read models. orbit-api already shapes these
+     * (see its docs/api/github.md), so they stay plain arrays here.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listPullRequests(string $relayToken, int $repositoryId, string $state, int $page, int $perPage): array
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/pull-requests', [
+                'repositoryId' => $repositoryId,
+                'state' => $state,
+                'page' => $page,
+                'perPage' => $perPage,
+            ]),
+            'GET /v1/github/pull-requests',
+        );
+
+        return $data['pullRequests'];
+    }
+
+    /** @return array<string, mixed> */
+    public function getPullRequest(string $relayToken, int $repositoryId, int $number): array
+    {
+        return $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/pull-requests', [
+                'repositoryId' => $repositoryId,
+                'number' => $number,
+            ]),
+            'GET /v1/github/pull-requests',
+        );
+    }
+
+    /**
+     * @param  array{state?: string, title?: string, body?: string}  $changes
+     * @return array<string, mixed>
+     */
+    public function updatePullRequest(string $relayToken, int $repositoryId, int $number, array $changes): array
+    {
+        return $this->request(
+            fn () => $this->authenticatedClient($relayToken)->post('/v1/github/pull-request-update', [
+                'repositoryId' => $repositoryId,
+                'number' => $number,
+                ...$changes,
+            ]),
+            'POST /v1/github/pull-request-update',
+        );
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function listCommits(string $relayToken, int $repositoryId, ?string $branch, int $page, int $perPage): array
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/commits', array_filter([
+                'repositoryId' => $repositoryId,
+                'branch' => $branch,
+                'page' => $page,
+                'perPage' => $perPage,
+            ], fn ($value) => $value !== null)),
+            'GET /v1/github/commits',
+        );
+
+        return $data['commits'];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function listBranches(string $relayToken, int $repositoryId): array
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/branches', ['repositoryId' => $repositoryId]),
+            'GET /v1/github/branches',
+        );
+
+        return $data['branches'];
+    }
+
+    /** @return array<string, mixed> */
+    public function getChecks(string $relayToken, int $repositoryId, string $ref): array
+    {
+        return $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/checks', [
+                'repositoryId' => $repositoryId,
+                'ref' => $ref,
+            ]),
+            'GET /v1/github/checks',
+        );
+    }
+
+    /** @return array<string, mixed> */
+    public function getInsights(string $relayToken, int $repositoryId): array
+    {
+        return $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/insights', ['repositoryId' => $repositoryId]),
+            'GET /v1/github/insights',
+        );
+    }
+
     public function removeRepository(string $relayToken, int $repositoryId): void
     {
         $this->request(
