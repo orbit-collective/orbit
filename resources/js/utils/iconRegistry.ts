@@ -85,6 +85,8 @@ import FolderOpen from 'lucide-react/icons/folder-open';
 import FolderPlus from 'lucide-react/icons/folder-plus';
 import Gauge from 'lucide-react/icons/gauge';
 import GitBranch from 'lucide-react/icons/git-branch';
+import GitCommitHorizontal from 'lucide-react/icons/git-commit-horizontal';
+import GitFork from 'lucide-react/icons/git-fork';
 import GitMerge from 'lucide-react/icons/git-merge';
 import GitPullRequest from 'lucide-react/icons/git-pull-request';
 import GitPullRequestClosed from 'lucide-react/icons/git-pull-request-closed';
@@ -329,6 +331,8 @@ export const iconRegistry: Record<string, LucideIcon> = {
     FolderPlus,
     Gauge,
     GitBranch,
+    GitCommitHorizontal,
+    GitFork,
     GitMerge,
     GitPullRequest,
     GitPullRequestClosed,
