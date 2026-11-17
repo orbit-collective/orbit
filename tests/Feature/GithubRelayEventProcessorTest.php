@@ -971,16 +971,21 @@ test('every pull request, check and review event is announced to the development
     config(['live.enabled' => true]);
     Event::fake([ProjectChanged::class]);
     $this->project->refresh();
-    $version = CacheVersion::current(CacheVersion::development($this->project->id));
+    $pulls = CacheVersion::current(CacheVersion::development($this->project->id, 'pulls'));
+    $checks = CacheVersion::current(CacheVersion::development($this->project->id, 'checks'));
+    $commits = CacheVersion::current(CacheVersion::development($this->project->id, 'commits'));
 
     // No marker: nothing is linked, and the view still hears of the pull request.
     $this->processor->process(makeRelayEvent('No marker here.'), $this->projectIntegration);
     $this->processor->process(makeCheckSuiteEvent(4580098240, 'passed'), $this->projectIntegration);
     app(LiveUpdates::class)->flush();
 
-    expect(CacheVersion::current(CacheVersion::development($this->project->id)))->toBe($version + 2);
+    // The pull request event dropped the list, the check event only the checks; nothing else.
+    expect(CacheVersion::current(CacheVersion::development($this->project->id, 'pulls')))->toBe($pulls + 1)
+        ->and(CacheVersion::current(CacheVersion::development($this->project->id, 'checks')))->toBe($checks + 1)
+        ->and(CacheVersion::current(CacheVersion::development($this->project->id, 'commits')))->toBe($commits);
     Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => $event->projectId === $this->project->id
-        && collect($event->changes)->contains(fn ($change) => $change['type'] === 'development'));
+        && collect($event->changes)->contains(fn ($change) => $change['type'] === 'development.pulls'));
 });
 
 test('an event that is not about pull requests is not announced', function () {

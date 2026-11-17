@@ -13,6 +13,7 @@ use App\Repositories\IssueRepository;
 use App\Repositories\ProjectIntegrationRepository;
 use App\Services\ActivityLogService;
 use App\Support\Cache\CacheVersion;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -34,9 +35,15 @@ class GithubDevelopmentService
      * (pull requests, CI) stays short, what barely moves (statistics,
      * branches) lives longer. Every write drops all of them.
      */
-    private const int TTL_PULL_REQUESTS = 30;
+    private const int TTL_PULL_REQUESTS = 60;
 
     private const int TTL_CHECKS = 30;
+
+    private const int TTL_CI_FINAL = 600;
+
+    private const int TTL_CI_NONE = 120;
+
+    private const int TTL_CI_PENDING = 10;
 
     private const int TTL_ISSUES = 60;
 
@@ -103,7 +110,7 @@ class GithubDevelopmentService
     {
         [$projectIntegration, $token, $repository] = $this->context($project, $repositoryId);
 
-        $result = $this->remember($project, "pulls:$repositoryId:$state:$page:$perPage:$since", self::TTL_PULL_REQUESTS, fn () => $this->relayClient->listPullRequests($token, $repositoryId, $state, $page, $perPage, $since, withCi: false));
+        $result = $this->remember($project, GithubDevelopmentAnnouncer::PULLS, "pulls:$repositoryId:$state:$page:$perPage:$since", self::TTL_PULL_REQUESTS, fn () => $this->relayClient->listPullRequests($token, $repositoryId, $state, $page, $perPage, $since, withCi: false));
 
         return [
             'pullRequests' => $this->withLinkedIssues($projectIntegration, $repository, $result['pullRequests']),
@@ -121,9 +128,53 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        sort($refs);
+        // Cached per commit, not per batch: paging, a reload or a different
+        // sample asks again for commits already read, and only the misses go
+        // to GitHub. A finished run does not change for its commit (kept for
+        // ten minutes), a running or unknown one is looked at again in seconds.
+        $scope = CacheVersion::development($project->id, GithubDevelopmentAnnouncer::CHECKS);
+        $keys = [];
 
-        return $this->remember($project, "checks-batch:$repositoryId:".md5(implode(',', $refs)), self::TTL_CHECKS, fn () => $this->relayClient->getChecksBatch($token, $repositoryId, $refs));
+        foreach ($refs as $ref) {
+            $keys[$ref] = CacheVersion::keyFor($scope, "ci:$repositoryId:$ref");
+        }
+
+        $cached = Cache::many(array_values($keys));
+        $checks = [];
+        $missing = [];
+
+        foreach ($keys as $ref => $key) {
+            $entry = $cached[$key] ?? null;
+
+            if (is_array($entry) && array_key_exists('ci', $entry)) {
+                $checks[$ref] = $entry['ci'];
+            } else {
+                $missing[] = $ref;
+            }
+        }
+
+        if ($missing !== []) {
+            $fresh = $this->call(fn () => $this->relayClient->getChecksBatch($token, $repositoryId, $missing));
+
+            foreach ($missing as $ref) {
+                $ci = $fresh[$ref] ?? null;
+                $checks[$ref] = $ci;
+
+                Cache::put($keys[$ref], ['ci' => $ci], $this->ciTtl($ci));
+            }
+        }
+
+        return $checks;
+    }
+
+    /** How long one commit's checks are reused, by how final they are. */
+    private function ciTtl(?array $ci): int
+    {
+        return match ($ci['state'] ?? null) {
+            'passed', 'failed' => self::TTL_CI_FINAL,
+            'none' => self::TTL_CI_NONE,
+            default => self::TTL_CI_PENDING,
+        };
     }
 
     /**
@@ -136,7 +187,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "gh-issues:$repositoryId:$state:$page:$perPage:$since", self::TTL_ISSUES, fn () => $this->relayClient->listIssues($token, $repositoryId, $state, $page, $perPage, $since));
+        return $this->remember($project, GithubDevelopmentAnnouncer::ISSUES, "gh-issues:$repositoryId:$state:$page:$perPage:$since", self::TTL_ISSUES, fn () => $this->relayClient->listIssues($token, $repositoryId, $state, $page, $perPage, $since));
     }
 
     /** @return array<string, mixed> */
@@ -154,7 +205,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "commits:$repositoryId:$branch:$page:$perPage", self::TTL_COMMITS, fn () => $this->relayClient->listCommits($token, $repositoryId, $branch, $page, $perPage));
+        return $this->remember($project, GithubDevelopmentAnnouncer::COMMITS, "commits:$repositoryId:$branch:$page:$perPage", self::TTL_COMMITS, fn () => $this->relayClient->listCommits($token, $repositoryId, $branch, $page, $perPage));
     }
 
     /** @return array{branches: list<array<string, mixed>>, total: int, page: int, perPage: int} */
@@ -162,7 +213,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "branches:$repositoryId:$page:$perPage", self::TTL_BRANCHES, fn () => $this->relayClient->listBranches($token, $repositoryId, $page, $perPage));
+        return $this->remember($project, GithubDevelopmentAnnouncer::BRANCHES, "branches:$repositoryId:$page:$perPage", self::TTL_BRANCHES, fn () => $this->relayClient->listBranches($token, $repositoryId, $page, $perPage));
     }
 
     /** @return array<string, mixed> */
@@ -170,7 +221,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "checks:$repositoryId:$ref", self::TTL_CHECKS, fn () => $this->relayClient->getChecks($token, $repositoryId, $ref));
+        return $this->remember($project, GithubDevelopmentAnnouncer::CHECKS, "checks:$repositoryId:$ref", self::TTL_CHECKS, fn () => $this->relayClient->getChecks($token, $repositoryId, $ref));
     }
 
     /** @return array<string, mixed> */
@@ -178,7 +229,7 @@ class GithubDevelopmentService
     {
         [, $token] = $this->context($project, $repositoryId);
 
-        return $this->remember($project, "insights:$repositoryId", self::TTL_INSIGHTS, fn () => $this->relayClient->getInsights($token, $repositoryId));
+        return $this->remember($project, GithubDevelopmentAnnouncer::INSIGHTS, "insights:$repositoryId", self::TTL_INSIGHTS, fn () => $this->relayClient->getInsights($token, $repositoryId));
     }
 
     /**
@@ -195,7 +246,7 @@ class GithubDevelopmentService
 
         $this->activityLogService->log($project->id, ($state === 'closed' ? 'Closed' : 'Reopened')." pull request $repository->owner/$repository->name#$number");
 
-        $this->forget($project);
+        $this->announce($project, [GithubDevelopmentAnnouncer::PULLS]);
     }
 
     /**
@@ -213,7 +264,7 @@ class GithubDevelopmentService
 
         $this->activityLogService->log($project->id, "Merged pull request $repository->owner/$repository->name#$number ($method)");
 
-        $this->forget($project);
+        $this->announce($project, [GithubDevelopmentAnnouncer::PULLS, GithubDevelopmentAnnouncer::COMMITS]);
     }
 
     /**
@@ -275,7 +326,8 @@ class GithubDevelopmentService
 
         $this->activityLogService->log($project->id, "Linked #$issue->number to pull request $repository->owner/$repository->name#$number");
 
-        $this->forget($project);
+        // The cached list does not hold the linked issues (they are joined on every read), so nothing cached went stale.
+        $this->announce($project, [GithubDevelopmentAnnouncer::PULLS], bust: false);
     }
 
     /** Drops an issue's link to a pull request, marker included. */
@@ -301,7 +353,7 @@ class GithubDevelopmentService
 
         $this->activityLogService->log($project->id, "Unlinked #$issue->number from pull request $repository->owner/$repository->name#$number");
 
-        $this->forget($project);
+        $this->announce($project, [GithubDevelopmentAnnouncer::PULLS], bust: false);
     }
 
     /**
@@ -319,21 +371,24 @@ class GithubDevelopmentService
     }
 
     /**
-     * A write was made from the view (or a branch created): drops what it
-     * cached and tells everyone else looking at the project to read again.
+     * A write was made from the view: drops the cached reads of the kinds it
+     * changed and tells everyone else looking at the project to read just
+     * those again.
+     *
+     * @param  list<string>  $kinds
      */
-    public function forget(Project $project): void
+    public function announce(Project $project, array $kinds, bool $bust = true): void
     {
-        $this->announcer->announce($project->id);
+        $this->announcer->announce($project->id, $kinds, $bust);
     }
 
     /**
-     * Drops only what the view cached, without telling anyone: the refresh
-     * button's own reload follows, and nothing changed for the others.
+     * Drops every cached read without telling anyone: the refresh button's
+     * own reload follows, and nothing changed for the others.
      */
     public function dropCache(Project $project): void
     {
-        CacheVersion::bump(CacheVersion::development($project->id));
+        $this->announcer->drop($project->id);
     }
 
     /**
@@ -397,10 +452,10 @@ class GithubDevelopmentService
      * @param  callable(): T  $callback
      * @return T
      */
-    private function remember(Project $project, string $key, int $ttl, callable $callback): mixed
+    private function remember(Project $project, string $kind, string $key, int $ttl, callable $callback): mixed
     {
         return CacheVersion::remember(
-            CacheVersion::development($project->id),
+            CacheVersion::development($project->id, $kind),
             "development:$project->id:$key",
             $ttl,
             fn () => $this->call($callback),
