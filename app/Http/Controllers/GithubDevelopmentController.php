@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Services\Integrations\Github\GithubBranchService;
+use App\Services\Integrations\Github\GithubDevelopmentAnnouncer;
 use App\Services\Integrations\Github\GithubDevelopmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -185,7 +186,7 @@ class GithubDevelopmentController extends Controller
 
         $branch = $this->branchService->createBranch($project, $data['repository_id'], $data['name'], $data['base_branch'] ?? null);
 
-        $this->developmentService->forget($project);
+        $this->developmentService->announce($project, [GithubDevelopmentAnnouncer::BRANCHES]);
 
         return response()->json(['name' => $branch->name, 'url' => $branch->url], 201);
     }

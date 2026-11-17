@@ -8,6 +8,7 @@ use App\Models\ProjectIntegration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Events\Live\ProjectChanged;
+use App\Support\Cache\CacheVersion;
 use App\Support\Live\LiveUpdates;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
@@ -510,5 +511,110 @@ test('a write from the view tells everyone looking at the project to read again,
     app(LiveUpdates::class)->flush();
 
     Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => $event->projectId === $this->project->id
-        && collect($event->changes)->contains(fn ($change) => $change['type'] === 'development'));
+        && collect($event->changes)->contains(fn ($change) => $change['type'] === 'development.pulls'));
+});
+
+function developmentVersion(Project $project, string $kind): int
+{
+    return CacheVersion::current(CacheVersion::development($project->id, $kind));
+}
+
+test('merging drops only the pull request list and the commits, not the statistics or the branches', function () {
+    Http::fake(['*/v1/github/pull-request-merge' => relayOk(['merged' => true, 'sha' => 'abc', 'message' => 'merged'])]);
+    $before = collect(['pulls', 'checks', 'commits', 'branches', 'issues', 'insights'])->mapWithKeys(fn ($kind) => [$kind => developmentVersion($this->project, $kind)]);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/merge", ['repository_id' => DEV_REPO_ID, 'method' => 'merge'])->assertOk();
+
+    expect(developmentVersion($this->project, 'pulls'))->toBe($before['pulls'] + 1)
+        ->and(developmentVersion($this->project, 'commits'))->toBe($before['commits'] + 1)
+        ->and(developmentVersion($this->project, 'checks'))->toBe($before['checks'])
+        ->and(developmentVersion($this->project, 'branches'))->toBe($before['branches'])
+        ->and(developmentVersion($this->project, 'insights'))->toBe($before['insights'])
+        ->and(developmentVersion($this->project, 'issues'))->toBe($before['issues']);
+});
+
+test('creating a branch drops only the branch list, and closing only the pull request list', function () {
+    Http::fake([
+        '*/v1/github/branches' => relayOk(['name' => 'feat/x', 'url' => 'u'], 201),
+        '*/v1/github/pull-request-update' => relayOk(relayPullRequest(['state' => 'closed'])),
+    ]);
+    $branches = developmentVersion($this->project, 'branches');
+    $pulls = developmentVersion($this->project, 'pulls');
+    $insights = developmentVersion($this->project, 'insights');
+
+    $this->actingAs($this->member)->postJson("$this->base/branches", ['repository_id' => DEV_REPO_ID, 'name' => 'feat/x'])->assertCreated();
+    expect(developmentVersion($this->project, 'branches'))->toBe($branches + 1)->and(developmentVersion($this->project, 'pulls'))->toBe($pulls);
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/state", ['repository_id' => DEV_REPO_ID, 'state' => 'closed'])->assertOk();
+    expect(developmentVersion($this->project, 'pulls'))->toBe($pulls + 1)->and(developmentVersion($this->project, 'insights'))->toBe($insights);
+});
+
+test('linking an issue announces the list to others but does not throw the cached list away', function () {
+    config(['live.enabled' => true]);
+    Event::fake([ProjectChanged::class]);
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+    Http::fake([
+        '*/v1/github/pull-requests*' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-update' => relayOk(relayPullRequest()),
+        '*/v1/github/pull-request-comment' => relayOk(['id' => 9, 'url' => 'u'], 201),
+    ]);
+    $pulls = developmentVersion($this->project, 'pulls');
+
+    $this->actingAs($this->member)->postJson("$this->base/pull-requests/7/issues", ['repository_id' => DEV_REPO_ID, 'issue_id' => $issue->id])->assertCreated();
+    app(LiveUpdates::class)->flush();
+
+    expect(developmentVersion($this->project, 'pulls'))->toBe($pulls);
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => collect($event->changes)->contains(fn ($change) => $change['type'] === 'development.pulls'));
+});
+
+test('the refresh button drops every kind', function () {
+    $before = developmentVersion($this->project, 'insights');
+
+    $this->actingAs($this->member)->postJson("$this->base/refresh")->assertNoContent();
+
+    expect(developmentVersion($this->project, 'insights'))->toBe($before + 1)
+        ->and(developmentVersion($this->project, 'pulls'))->toBeGreaterThan(0);
+});
+
+test('the checks of each commit are cached on their own, so only the commits not seen yet go to GitHub', function () {
+    Http::fake(['*/v1/github/checks*' => function ($request) {
+        $refs = explode(',', preg_replace('/^.*refs=/', '', urldecode($request->url())));
+
+        return relayOk(['checks' => collect($refs)->mapWithKeys(fn ($sha) => [$sha => ['state' => 'passed', 'total' => 1, 'passed' => 1, 'failed' => 0, 'pending' => 0, 'runs' => []]])->all()]);
+    }]);
+
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=aaa&refs[]=bbb")->assertOk()->assertJsonPath('checks.aaa.state', 'passed');
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=bbb&refs[]=ccc")->assertOk()->assertJsonPath('checks.ccc.state', 'passed')->assertJsonPath('checks.bbb.state', 'passed');
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=aaa&refs[]=ccc")->assertOk();
+
+    // The second call only asked for the commit it had not seen, the third for none.
+    Http::assertSentCount(2);
+    Http::assertSent(fn ($request) => str_contains(urldecode($request->url()), 'refs=ccc') && ! str_contains(urldecode($request->url()), 'bbb'));
+});
+
+test('a commit whose checks are still running, or unknown, is asked about again soon while a finished one is kept', function () {
+    Http::fake(['*/v1/github/checks*' => relayOk(['checks' => [
+        'run' => ['state' => 'pending', 'total' => 1, 'passed' => 0, 'failed' => 0, 'pending' => 1, 'runs' => []],
+        'done' => ['state' => 'passed', 'total' => 1, 'passed' => 1, 'failed' => 0, 'pending' => 0, 'runs' => []],
+        'gone' => null,
+    ]])]);
+
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=run&refs[]=done&refs[]=gone")->assertOk();
+    $this->travel(11)->seconds();
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=run&refs[]=done&refs[]=gone")->assertOk();
+
+    // After ten seconds the running and the unknown one were asked for again, the finished one was not.
+    Http::assertSentCount(2);
+    Http::assertSent(fn ($request) => str_contains(urldecode($request->url()), 'refs=gone,run') || str_contains(urldecode($request->url()), 'refs=run,gone'));
+});
+
+test('a check event drops the cached checks of every commit, so a finished run is never shown as running', function () {
+    Http::fake(['*/v1/github/checks*' => Http::sequence()
+        ->push(['success' => true, 'data' => ['checks' => ['aaa' => ['state' => 'passed', 'total' => 1, 'passed' => 1, 'failed' => 0, 'pending' => 0, 'runs' => []]]]])
+        ->push(['success' => true, 'data' => ['checks' => ['aaa' => ['state' => 'failed', 'total' => 1, 'passed' => 0, 'failed' => 1, 'pending' => 0, 'runs' => []]]]])]);
+
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=aaa")->assertJsonPath('checks.aaa.state', 'passed');
+    app(\App\Services\Integrations\Github\GithubDevelopmentAnnouncer::class)->announce($this->project->id, ['checks']);
+
+    $this->actingAs($this->member)->getJson("$this->base/checks-batch$this->query&refs[]=aaa")->assertJsonPath('checks.aaa.state', 'failed');
 });

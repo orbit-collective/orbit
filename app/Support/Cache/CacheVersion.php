@@ -28,10 +28,30 @@ final class CacheVersion
     /** A user's name or avatar changed, or a user was deleted (shown on issues). */
     public const string USERS = 'users';
 
-    /** What a project's Development view read from GitHub; bumped by every write the view (or a relay event) makes. */
-    public static function development(int $projectId): string
+    /**
+     * What a project's Development view read from GitHub, one scope per kind
+     * of data (pulls, checks, commits, branches, issues, insights) so that
+     * a change only drops the reads it can have made stale: merging a pull
+     * request must not throw away the statistics or the branch list.
+     */
+    public static function development(int $projectId, string $kind): string
     {
-        return "development:$projectId";
+        return "development:$projectId:$kind";
+    }
+
+    /**
+     * The key `remember()` would use, for callers that read and write several
+     * values at once (a batch where only the misses are fetched).
+     *
+     * @param  string|list<string>  $scopes
+     */
+    public static function keyFor(string|array $scopes, string $key): string
+    {
+        $versions = collect((array) $scopes)
+            ->map(fn (string $scope) => $scope.'.v'.self::current($scope))
+            ->implode('|');
+
+        return "cached:$versions:$key";
     }
 
     public static function project(int $projectId): string
@@ -66,11 +86,7 @@ final class CacheVersion
      */
     public static function remember(string|array $scopes, string $key, int $ttl, Closure $callback): mixed
     {
-        $versions = collect((array) $scopes)
-            ->map(fn (string $scope) => $scope.'.v'.self::current($scope))
-            ->implode('|');
-
-        return Cache::remember("cached:$versions:$key", $ttl, $callback);
+        return Cache::remember(self::keyFor($scopes, $key), $ttl, $callback);
     }
 
     private static function key(string $scope): string

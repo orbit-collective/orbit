@@ -64,11 +64,38 @@ class GithubRelayEventProcessor
         // linked to an issue or not, so what happened to one is news for it
         // whatever the outcome of linking was. (A transient failure threw
         // above: the event comes again and is announced then.)
-        if (in_array($event->type, ['pull_request', 'check_suite', 'pull_request_review'], true)) {
-            $this->developmentAnnouncer->announce($projectIntegration->project_id);
+        $kinds = $this->developmentKinds($event);
+
+        if ($kinds !== []) {
+            // A review changes nothing the view caches (its detail is read live).
+            $this->developmentAnnouncer->announce($projectIntegration->project_id, $kinds, bust: $event->type !== 'pull_request_review');
         }
 
         return $outcome;
+    }
+
+    /**
+     * Which reads of the Development view an event makes stale: a pull
+     * request opening, closing or being reopened changes the list (a merge
+     * also the commits of the base branch), new commits pushed to it change
+     * the list, its checks and the commits, and a check run only its checks.
+     *
+     * @return list<string>
+     */
+    private function developmentKinds(GithubRelayEventDTO $event): array
+    {
+        return match ($event->type) {
+            'pull_request' => match ($event->action) {
+                'synchronize' => [GithubDevelopmentAnnouncer::PULLS, GithubDevelopmentAnnouncer::CHECKS, GithubDevelopmentAnnouncer::COMMITS],
+                'closed' => $event->pullRequestMerged === true
+                    ? [GithubDevelopmentAnnouncer::PULLS, GithubDevelopmentAnnouncer::COMMITS]
+                    : [GithubDevelopmentAnnouncer::PULLS],
+                default => [GithubDevelopmentAnnouncer::PULLS],
+            },
+            'check_suite' => [GithubDevelopmentAnnouncer::CHECKS],
+            'pull_request_review' => [GithubDevelopmentAnnouncer::PULLS],
+            default => [],
+        };
     }
 
     private function handleOpened(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
