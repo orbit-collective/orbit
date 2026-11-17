@@ -652,9 +652,10 @@ describe('DevelopmentView', () => {
         await screen.findByText('+120');
         const from = vi.mocked(axios.get).mock.calls.length;
 
-        await userEvent.click(screen.getByRole('button', { name: 'Merge' }));
+        await userEvent.click(screen.getByRole('button', { name: /^Merge…/ }));
+        await screen.findByRole('radiogroup');
         await userEvent.click(
-            screen.getByRole('button', { name: 'Confirm merge commit' }),
+            screen.getByRole('button', { name: 'Merge pull request' }),
         );
 
         await waitFor(() =>

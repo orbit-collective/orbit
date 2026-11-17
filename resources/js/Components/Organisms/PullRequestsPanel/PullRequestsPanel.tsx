@@ -7,7 +7,7 @@ import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import PullRequestDetail from '@/Components/Molecules/PullRequestDetail/PullRequestDetail';
-import { MergeOptions } from '@/Components/Molecules/PullRequestMergeForm/PullRequestMergeForm';
+import { MergeOptions } from '@/Components/Molecules/PullRequestMergeBox/PullRequestMergeBox';
 import PullRequestRow from '@/Components/Molecules/PullRequestRow/PullRequestRow';
 import LinkIssueModal from '@/Components/Organisms/LinkIssueModal/LinkIssueModal';
 import { useStoredChoice } from '@/hooks/useStoredChoice';

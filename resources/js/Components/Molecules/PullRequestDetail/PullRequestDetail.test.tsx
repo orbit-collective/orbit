@@ -280,23 +280,25 @@ describe('PullRequestDetail', () => {
         renderDetail({}, callbacks);
         await screen.findByText('+120');
 
-        const merge = screen.getByRole('button', { name: 'Merge' });
+        const merge = screen.getByRole('button', { name: /^Merge…/ });
         expect(merge).toHaveAttribute('aria-expanded', 'false');
         await userEvent.click(merge);
+        await screen.findByRole('radiogroup');
 
         expect(
             screen.getByRole('form', { name: 'Merge pull request #7' }),
         ).toBeInTheDocument();
         await userEvent.click(
-            screen.getByRole('button', { name: 'Confirm merge commit' }),
+            screen.getByRole('button', { name: 'Merge pull request' }),
         );
 
         expect(callbacks.onMerge).toHaveBeenCalledWith({
             method: 'merge',
             commitTitle: 'Merge pull request #7',
         });
+        // Folded back up once it is merged.
         await waitFor(() =>
-            expect(screen.queryByRole('form')).not.toBeInTheDocument(),
+            expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument(),
         );
     });
 
@@ -308,9 +310,10 @@ describe('PullRequestDetail', () => {
         renderDetail({}, callbacks);
         await screen.findByText('+120');
 
-        await userEvent.click(screen.getByRole('button', { name: 'Merge' }));
+        await userEvent.click(screen.getByRole('button', { name: /^Merge…/ }));
+        await screen.findByRole('radiogroup');
         await userEvent.click(
-            screen.getByRole('button', { name: 'Confirm merge commit' }),
+            screen.getByRole('button', { name: 'Merge pull request' }),
         );
 
         expect(callbacks.onMerge).toHaveBeenCalled();
@@ -330,12 +333,11 @@ describe('PullRequestDetail', () => {
         renderDetail();
         await screen.findByText('Has conflicts');
 
-        const merge = screen.getByRole('button', { name: 'Merge' });
+        const merge = screen.getByRole('button', { name: /^Merge…/ });
         expect(merge).toBeDisabled();
-        expect(merge).toHaveAttribute(
-            'title',
-            expect.stringMatching(/conflicts/),
-        );
+        expect(
+            screen.getByText(/conflicts that must be resolved/),
+        ).toBeInTheDocument();
     });
 
     test('other states leave merging to GitHub, which says why it refuses', async () => {
@@ -347,7 +349,7 @@ describe('PullRequestDetail', () => {
         expect(
             await screen.findByText('Blocked by branch rules'),
         ).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Merge' })).toBeEnabled();
+        expect(screen.getByRole('button', { name: /^Merge…/ })).toBeEnabled();
     });
 
     test('no merge for a draft, a closed pull request, or without the manage ability', async () => {
@@ -356,7 +358,7 @@ describe('PullRequestDetail', () => {
         });
         await screen.findByText('+120');
         expect(
-            screen.queryByRole('button', { name: 'Merge' }),
+            screen.queryByRole('button', { name: /^Merge…/ }),
         ).not.toBeInTheDocument();
         unmount();
 
@@ -365,7 +367,7 @@ describe('PullRequestDetail', () => {
         });
         await screen.findByText('+120');
         expect(
-            screen.queryByRole('button', { name: 'Merge' }),
+            screen.queryByRole('button', { name: /^Merge…/ }),
         ).not.toBeInTheDocument();
         expect(screen.queryByText('Ready to merge')).not.toBeInTheDocument();
         unmountClosed();
@@ -373,7 +375,7 @@ describe('PullRequestDetail', () => {
         renderDetail({ abilities: { manage: false, createBranch: false } });
         await screen.findByText('+120');
         expect(
-            screen.queryByRole('button', { name: 'Merge' }),
+            screen.queryByRole('button', { name: /^Merge…/ }),
         ).not.toBeInTheDocument();
     });
 
