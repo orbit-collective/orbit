@@ -9,7 +9,7 @@ import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatusPill from '@/Components/Atoms/StatusPill/StatusPill';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
-import { MergeOptions } from '@/Components/Molecules/PullRequestMergeForm/PullRequestMergeForm';
+import { MergeOptions } from '@/Components/Molecules/PullRequestMergeBox/PullRequestMergeBox';
 import BranchesPanel from '@/Components/Organisms/BranchesPanel/BranchesPanel';
 import CommitsPanel from '@/Components/Organisms/CommitsPanel/CommitsPanel';
 import CreateBranchModal from '@/Components/Organisms/CreateBranchModal/CreateBranchModal';

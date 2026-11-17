@@ -373,10 +373,11 @@ describe('PullRequestsPanel', () => {
             screen.getByRole('button', { name: /Add login redirect/ }),
         );
         await screen.findByText('+120');
-        await userEvent.click(screen.getByRole('button', { name: 'Merge' }));
-        await userEvent.click(screen.getByRole('button', { name: 'Squash' }));
+        await userEvent.click(screen.getByRole('button', { name: /^Merge…/ }));
+        await screen.findByRole('radiogroup');
+        await userEvent.click(screen.getByRole('radio', { name: /Squash/ }));
         await userEvent.click(
-            screen.getByRole('button', { name: 'Confirm squash and merge' }),
+            screen.getByRole('button', { name: 'Squash and merge' }),
         );
 
         expect(props.onMerge).toHaveBeenCalledWith(

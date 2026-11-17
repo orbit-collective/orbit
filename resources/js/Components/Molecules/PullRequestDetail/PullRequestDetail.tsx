@@ -8,9 +8,9 @@ import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatusPill from '@/Components/Atoms/StatusPill/StatusPill';
 import CiRunList from '@/Components/Molecules/CiRunList/CiRunList';
 import CommitItem from '@/Components/Molecules/CommitItem/CommitItem';
-import PullRequestMergeForm, {
+import PullRequestMergeBox, {
     MergeOptions,
-} from '@/Components/Molecules/PullRequestMergeForm/PullRequestMergeForm';
+} from '@/Components/Molecules/PullRequestMergeBox/PullRequestMergeBox';
 import { useDevelopmentResource } from '@/hooks/useDevelopmentResource';
 import {
     CiSummary,
@@ -91,7 +91,6 @@ export default function PullRequestDetail({
     }, [version, reload]);
 
     const [confirming, setConfirming] = useState(false);
-    const [merging, setMerging] = useState(false);
     const canChange = abilities.manage && githubLinked;
     const closing = pullRequest.state === 'open';
     const canToggle = pullRequest.state !== 'merged';
@@ -165,6 +164,13 @@ export default function PullRequestDetail({
                         },
                     )}
                 </li>
+                {standing && pullRequest.state === 'open' && (
+                    <li>
+                        <StatusPill tone={standing.tone} icon={standing.icon}>
+                            {t(standing.labelKey)}
+                        </StatusPill>
+                    </li>
+                )}
             </ul>
 
             <div className="grid gap-5 md:grid-cols-2">
@@ -323,28 +329,6 @@ export default function PullRequestDetail({
                     <Icon name="ExternalLink" size={14} />
                     {t('pull_request_detail.open_on_github')}
                 </a>
-                {canMerge && (
-                    <Button
-                        type="button"
-                        className="px-3 py-1.5"
-                        isDisabled={busy || standing?.blocksMerge === true}
-                        aria-expanded={merging}
-                        title={
-                            standing?.blocksMerge
-                                ? t('pull_request_detail.merge_conflicts')
-                                : undefined
-                        }
-                        onClick={() => setMerging((open) => !open)}
-                    >
-                        <Icon name="GitMerge" size={14} />
-                        {t('pull_request_detail.merge')}
-                    </Button>
-                )}
-                {standing && pullRequest.state === 'open' && (
-                    <StatusPill tone={standing.tone} icon={standing.icon}>
-                        {t(standing.labelKey)}
-                    </StatusPill>
-                )}
                 {canChange && canToggle && (
                     <Button
                         type="button"
@@ -386,18 +370,17 @@ export default function PullRequestDetail({
                     </span>
                 )}
             </div>
-            {canMerge && merging && (
-                <PullRequestMergeForm
+            {canMerge && (
+                <PullRequestMergeBox
                     number={pullRequest.number}
                     title={pullRequest.title}
                     busy={busy}
-                    onMerge={async (options) => {
-                        const merged = await onMerge(options);
-                        if (merged) setMerging(false);
-
-                        return merged;
-                    }}
-                    onCancel={() => setMerging(false)}
+                    blockedReason={
+                        standing?.blocksMerge
+                            ? t('pull_request_detail.merge_conflicts')
+                            : undefined
+                    }
+                    onMerge={onMerge}
                 />
             )}
         </div>
