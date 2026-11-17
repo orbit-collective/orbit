@@ -204,4 +204,104 @@ describe('usePullRequestWindow', () => {
         expect(result.current.pullRequests).toHaveLength(1);
         await waitFor(() => expect(axios.get).toHaveBeenCalledTimes(2));
     });
+
+    test('patch changes one pull request in what is shown right away', async () => {
+        vi.mocked(axios.get).mockResolvedValue(page([1, 2], false) as never);
+        const { result } = renderHook(() =>
+            usePullRequestWindow('/url', params(), 'failed'),
+        );
+        await waitFor(() =>
+            expect(result.current.pullRequests).toHaveLength(2),
+        );
+
+        act(() => result.current.patch(2, { state: 'merged' }));
+
+        expect(result.current.pullRequests?.map((pr) => pr.state)).toEqual([
+            'open',
+            'merged',
+        ]);
+        act(() => result.current.patch(999, { state: 'closed' }));
+        expect(result.current.pullRequests).toHaveLength(2);
+    });
+
+    test('refreshFirstPage reads one page and folds it in: changed ones replaced, new ones first, the rest kept', async () => {
+        vi.mocked(axios.get).mockResolvedValueOnce(
+            page([1, 2, 3], false) as never,
+        );
+        const { result } = renderHook(() =>
+            usePullRequestWindow('/url', params(), 'failed'),
+        );
+        await waitFor(() =>
+            expect(result.current.pullRequests).toHaveLength(3),
+        );
+
+        vi.mocked(axios.get).mockResolvedValueOnce({
+            data: {
+                pullRequests: [
+                    buildPullRequest({ number: 9, id: 9 }),
+                    buildPullRequest({ number: 2, id: 2, title: 'Renamed' }),
+                ],
+                hasMore: true,
+            },
+        } as never);
+        act(() => result.current.refreshFirstPage());
+
+        await waitFor(() =>
+            expect(result.current.pullRequests?.map((pr) => pr.number)).toEqual(
+                [9, 2, 1, 3],
+            ),
+        );
+        expect(result.current.pullRequests?.[1].title).toBe('Renamed');
+        expect(axios.get).toHaveBeenCalledTimes(2);
+        expect(axios.get).toHaveBeenLastCalledWith(
+            '/url',
+            expect.objectContaining({
+                params: {
+                    repository_id: 1,
+                    state: 'all',
+                    page: 1,
+                    per_page: 100,
+                },
+            }),
+        );
+    });
+
+    test('refreshFirstPage never grows the list past the limit, and ignores a failure', async () => {
+        vi.mocked(axios.get).mockResolvedValueOnce(
+            page([1, 2], false) as never,
+        );
+        const { result } = renderHook(() =>
+            usePullRequestWindow('/url', params({ limit: 2 }), 'failed'),
+        );
+        await waitFor(() =>
+            expect(result.current.pullRequests).toHaveLength(2),
+        );
+
+        vi.mocked(axios.get).mockResolvedValueOnce(page([9], false) as never);
+        act(() => result.current.refreshFirstPage());
+        await waitFor(() =>
+            expect(result.current.pullRequests?.map((pr) => pr.number)).toEqual(
+                [9, 1],
+            ),
+        );
+
+        vi.mocked(axios.get).mockRejectedValueOnce(new Error('x'));
+        act(() => result.current.refreshFirstPage());
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        expect(result.current.pullRequests?.map((pr) => pr.number)).toEqual([
+            9, 1,
+        ]);
+        expect(result.current.error).toBeNull();
+    });
+
+    test('refreshFirstPage does nothing without params', () => {
+        const { result } = renderHook(() =>
+            usePullRequestWindow('/url', null, 'failed'),
+        );
+
+        act(() => result.current.refreshFirstPage());
+
+        expect(axios.get).not.toHaveBeenCalled();
+    });
 });

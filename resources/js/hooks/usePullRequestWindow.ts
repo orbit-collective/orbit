@@ -16,7 +16,16 @@ interface PullRequestWindow {
     /** The range holds more than `limit` allows: what is shown is the newest of it. */
     capped: boolean;
     error: string | null;
+    /** Reads everything again (the whole range, page by page). */
     reload: () => void;
+    /**
+     * Reads only the newest page and folds it into what is shown: a changed
+     * pull request is replaced, a new one comes first, the rest stays as it is.
+     * What a write or a live change needs, instead of reading the whole range.
+     */
+    refreshFirstPage: () => void;
+    /** Changes one pull request in what is shown right away (before GitHub is asked). */
+    patch: (number: number, changes: Partial<DevelopmentPullRequest>) => void;
 }
 
 interface Result {
@@ -121,6 +130,69 @@ export function usePullRequestWindow(
     }, [url, paramsKey, requestKey, reloads]);
 
     const reload = useCallback(() => setReloads((count) => count + 1), []);
+
+    // The pieces the light refresh needs, kept in refs so it stays one stable function.
+    const query = useRef({ url, paramsKey });
+    query.current = { url, paramsKey };
+    const keyRef = useRef(requestKey);
+    keyRef.current = requestKey;
+
+    const patch = useCallback(
+        (number: number, changes: Partial<DevelopmentPullRequest>) =>
+            setResult((previous) =>
+                previous === null
+                    ? previous
+                    : {
+                          ...previous,
+                          pullRequests: previous.pullRequests.map((pr) =>
+                              pr.number === number ? { ...pr, ...changes } : pr,
+                          ),
+                      },
+            ),
+        [],
+    );
+
+    const refreshFirstPage = useCallback(() => {
+        const { url: current, paramsKey: currentParams } = query.current;
+        const startedFor = keyRef.current;
+        if (currentParams === null || startedFor === null) return;
+
+        const { limit, ...rest } = JSON.parse(currentParams) as {
+            limit: number;
+        } & Record<string, string | number>;
+
+        axios
+            .get<{ pullRequests: DevelopmentPullRequest[] }>(current, {
+                params: { ...rest, page: 1, per_page: PULL_REQUEST_PAGE },
+            })
+            .then(({ data }) =>
+                setResult((previous) => {
+                    // The person moved on (another repository or range) meanwhile.
+                    if (!previous || previous.key !== startedFor)
+                        return previous;
+
+                    const fresh = new Map(
+                        data.pullRequests.map((pr) => [pr.number, pr]),
+                    );
+                    // The pull requests of the fresh page come first, in its order;
+                    // the older ones it does not hold keep their place after them.
+                    const rest_ = previous.pullRequests.filter(
+                        (pr) => !fresh.has(pr.number),
+                    );
+
+                    return {
+                        ...previous,
+                        pullRequests: [...data.pullRequests, ...rest_].slice(
+                            0,
+                            limit,
+                        ),
+                    };
+                }),
+            )
+            .catch(() => {
+                // A light refresh that fails leaves what is shown; the next change or poll tries again.
+            });
+    }, []);
     const pullRequests =
         current && (current.pullRequests.length > 0 || current.error === null)
             ? current.pullRequests
@@ -133,5 +205,7 @@ export function usePullRequestWindow(
         capped: current?.capped ?? false,
         error: current?.error ?? null,
         reload,
+        refreshFirstPage,
+        patch,
     };
 }

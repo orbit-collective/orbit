@@ -74,6 +74,48 @@ describe('useDevelopmentLive', () => {
 
         vi.advanceTimersByTime(DEVELOPMENT_LIVE_DEBOUNCE_MS);
         expect(h.onChange).toHaveBeenCalledTimes(1);
+        // A bare `development` (an older server) means every kind.
+        expect(h.onChange).toHaveBeenCalledWith([
+            'pulls',
+            'checks',
+            'commits',
+            'branches',
+            'issues',
+            'insights',
+        ]);
+    });
+
+    test('reloads only the kinds that were announced, a burst of different ones as their union', () => {
+        const h = handlers();
+        renderHook(() => useDevelopmentLive(7, h));
+
+        mocks.handler!(change('development.pulls'));
+        vi.advanceTimersByTime(500);
+        mocks.handler!({
+            changes: [
+                { type: 'development.commits', id: null, action: 'updated' },
+                { type: 'development.pulls', id: null, action: 'updated' },
+            ],
+            actor: 2,
+        });
+        vi.advanceTimersByTime(DEVELOPMENT_LIVE_DEBOUNCE_MS);
+
+        expect(h.onChange).toHaveBeenCalledTimes(1);
+        expect(h.onChange).toHaveBeenCalledWith(['pulls', 'commits']);
+
+        mocks.handler!(change('development.checks'));
+        vi.advanceTimersByTime(DEVELOPMENT_LIVE_DEBOUNCE_MS);
+        expect(h.onChange).toHaveBeenLastCalledWith(['checks']);
+    });
+
+    test('ignores a development change of a kind it does not know', () => {
+        const h = handlers();
+        renderHook(() => useDevelopmentLive(7, h));
+
+        mocks.handler!(change('development.whatever'));
+        vi.advanceTimersByTime(DEVELOPMENT_LIVE_DEBOUNCE_MS);
+
+        expect(h.onChange).not.toHaveBeenCalled();
     });
 
     test('a burst of changes is one reload', () => {
@@ -166,5 +208,13 @@ describe('useDevelopmentLive', () => {
         rerender();
 
         expect(h.onChange).toHaveBeenCalledTimes(1);
+        expect(h.onChange).toHaveBeenCalledWith([
+            'pulls',
+            'checks',
+            'commits',
+            'branches',
+            'issues',
+            'insights',
+        ]);
     });
 });
