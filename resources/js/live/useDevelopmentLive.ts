@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
+import { DEVELOPMENT_KINDS, DevelopmentKind } from '@/types/Development';
 import { ProjectChangedPayload } from '@/types/Live';
 import { useLiveChannel } from './useLiveChannel';
 import { useLiveStatus } from './useLiveStatus';
@@ -18,8 +19,8 @@ export const DEVELOPMENT_SAFETY_REFRESH_MS = 5 * 60 * 1000;
 const JITTER = 0.2;
 
 interface DevelopmentLiveHandlers {
-    /** Someone else changed something the view shows: read it again (the server's cache is already dropped). */
-    onChange: () => void;
+    /** Someone else changed something the view shows: read just those kinds again (the server's cache is already dropped). */
+    onChange: (kinds: DevelopmentKind[]) => void;
     /** The socket cannot say anything: read again on a timer (from the server's cache, which is short-lived). */
     onPoll: () => void;
     /** A slow sweep for what the socket never hears of: drop the server's cache and read again. */
@@ -27,12 +28,29 @@ interface DevelopmentLiveHandlers {
 }
 
 /**
+ * The kinds of data a change of the project announces for this view:
+ * `development.pulls` and the like name one, a bare `development` (older
+ * servers) means all of them, anything else is none.
+ */
+function kindsOf(change: { type: string }): DevelopmentKind[] {
+    if (change.type === 'development') return [...DEVELOPMENT_KINDS];
+
+    const kind = change.type.startsWith('development.')
+        ? change.type.slice('development.'.length)
+        : null;
+
+    return DEVELOPMENT_KINDS.includes(kind as DevelopmentKind)
+        ? [kind as DevelopmentKind]
+        : [];
+}
+
+/**
  * Keeps the Development view in step with GitHub:
  *
- * - a `development` change on the project's live channel (announced by the
- *   server for every write from the view and every pull request, check or
- *   review event) reloads the view, after a short pause so a burst is one
- *   reload; the person's own changes are skipped, they already reloaded;
+ * - a `development.{kind}` change on the project's live channel (announced by
+ *   the server for every write from the view and every pull request, check
+ *   or review event) reloads just that kind of data, after a short pause so a
+ *   burst is one reload; the person's own changes are skipped, they already reloaded;
  * - without a working socket the view polls at the server's
  *   `LIVE_POLL_INTERVAL`, and once more when the socket comes back, since
  *   events sent meanwhile were missed;
@@ -54,6 +72,8 @@ export function useDevelopmentLive(
     const latest = useRef(handlers);
     latest.current = handlers;
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // The kinds announced since the last reload: a burst of different ones is one reload of their union.
+    const pendingKinds = useRef(new Set<DevelopmentKind>());
     const wasLive = useRef(false);
     const missed = useRef(false);
 
@@ -65,15 +85,17 @@ export function useDevelopmentLive(
         `project.${projectId}`,
         {
             'project.changed': ({ changes, actor }) => {
-                if (!changes.some((change) => change.type === 'development')) {
-                    return;
-                }
+                const kinds = changes.flatMap(kindsOf);
+                if (kinds.length === 0) return;
                 if (actor !== null && actor === me) return;
 
+                kinds.forEach((kind) => pendingKinds.current.add(kind));
                 if (timer.current) clearTimeout(timer.current);
                 timer.current = setTimeout(() => {
                     timer.current = null;
-                    if (visible()) latest.current.onChange();
+                    const due = [...pendingKinds.current];
+                    pendingKinds.current.clear();
+                    if (visible()) latest.current.onChange(due);
                 }, DEVELOPMENT_LIVE_DEBOUNCE_MS);
             },
         },
@@ -89,7 +111,7 @@ export function useDevelopmentLive(
     // Back after an outage: events sent meanwhile were missed.
     useEffect(() => {
         if (status === 'live') {
-            if (missed.current) latest.current.onChange();
+            if (missed.current) latest.current.onChange([...DEVELOPMENT_KINDS]);
             missed.current = false;
             wasLive.current = true;
         } else if (wasLive.current || status === 'offline') {

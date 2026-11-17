@@ -24,9 +24,9 @@ vi.mock('axios');
 
 const live = vi.hoisted(() => ({
     handlers: null as null | {
-        onChange: () => void;
+        onChange: (kinds: string[]) => void;
         onPoll: () => void;
-        onSafetyRefresh: () => void;
+        onSafetyRefresh: () => void | Promise<void>;
     },
     projectId: 0,
 }));
@@ -560,22 +560,69 @@ describe('DevelopmentView', () => {
         ).not.toBeInTheDocument();
     });
 
-    test("follows live changes: someone else's change and a poll read everything again", async () => {
+    const urlsSince = (from: number) =>
+        vi
+            .mocked(axios.get)
+            .mock.calls.slice(from)
+            .map(([url]) => String(url));
+    const readsOf = (from: number, part: string) =>
+        vi
+            .mocked(axios.get)
+            .mock.calls.slice(from)
+            .filter(([url]) => String(url).includes(part));
+
+    test('follows live changes by reading only the kinds that changed', async () => {
         renderView();
         await screen.findByText('Add login redirect');
         expect(live.projectId).toBe(3);
 
-        const reads = () => vi.mocked(axios.get).mock.calls.length;
-        let before = reads();
-        act(() => live.handlers!.onChange());
-        await waitFor(() => expect(reads()).toBeGreaterThan(before));
+        let from = vi.mocked(axios.get).mock.calls.length;
+        act(() => live.handlers!.onChange(['commits']));
+        await waitFor(() =>
+            expect(readsOf(from, 'commits.index')).toHaveLength(1),
+        );
+        expect(
+            urlsSince(from).filter((url) => !url.includes('commits.index')),
+        ).toEqual([]);
 
-        before = reads();
-        act(() => live.handlers!.onPoll());
-        await waitFor(() => expect(reads()).toBeGreaterThan(before));
+        from = vi.mocked(axios.get).mock.calls.length;
+        act(() => live.handlers!.onChange(['pulls']));
+        await waitFor(() =>
+            expect(readsOf(from, 'pull-requests.index')).toHaveLength(1),
+        );
+        // One light read of the newest page, not the whole range again, and nothing else.
+        expect(readsOf(from, 'pull-requests.index')[0][1]).toEqual(
+            expect.objectContaining({
+                params: expect.objectContaining({ page: 1, per_page: 100 }),
+            }),
+        );
+        expect(
+            urlsSince(from).some((url) =>
+                /insights|branches|commits|github-issues/.test(url),
+            ),
+        ).toBe(false);
 
-        // Neither of those drops the server's cache: it was already dropped (or is short-lived).
+        from = vi.mocked(axios.get).mock.calls.length;
+        act(() => live.handlers!.onChange(['checks']));
+        await waitFor(() =>
+            expect(readsOf(from, 'checks.batch').length).toBeGreaterThan(0),
+        );
+        expect(readsOf(from, 'pull-requests.index')).toHaveLength(0);
+
+        // None of it drops the server's cache: it was dropped when the change was announced.
         expect(axios.post).not.toHaveBeenCalled();
+    });
+
+    test('a poll reads the light way: the newest page and the checks, never the whole range', async () => {
+        renderView();
+        await screen.findByText('Add login redirect');
+        const from = vi.mocked(axios.get).mock.calls.length;
+
+        act(() => live.handlers!.onPoll());
+
+        await waitFor(() =>
+            expect(readsOf(from, 'pull-requests.index')).toHaveLength(1),
+        );
     });
 
     test('the slow sweep drops the server cache first, like the refresh button', async () => {
@@ -583,7 +630,7 @@ describe('DevelopmentView', () => {
         await screen.findByText('Add login redirect');
         const before = vi.mocked(axios.get).mock.calls.length;
 
-        act(() => live.handlers!.onSafetyRefresh());
+        act(() => void live.handlers!.onSafetyRefresh());
 
         await waitFor(() =>
             expect(axios.post).toHaveBeenCalledWith(
@@ -594,6 +641,48 @@ describe('DevelopmentView', () => {
             expect(vi.mocked(axios.get).mock.calls.length).toBeGreaterThan(
                 before,
             ),
+        );
+    });
+
+    test('merging a pull request moves it to merged at once and reads only the newest page and the commits', async () => {
+        renderView();
+        await userEvent.click(
+            await screen.findByRole('button', { name: /Add login redirect/ }),
+        );
+        await screen.findByText('+120');
+        const from = vi.mocked(axios.get).mock.calls.length;
+
+        await userEvent.click(screen.getByRole('button', { name: 'Merge' }));
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Confirm merge commit' }),
+        );
+
+        await waitFor(() =>
+            expect(axios.post).toHaveBeenCalledWith(
+                '/projects.development.pull-requests.merge/3/7',
+                expect.objectContaining({
+                    method: 'merge',
+                    head_sha: 'abc1234def',
+                }),
+            ),
+        );
+        // The Open filter no longer has it, before GitHub has answered again.
+        await waitFor(() =>
+            expect(
+                screen.queryByText('Add login redirect'),
+            ).not.toBeInTheDocument(),
+        );
+
+        await waitFor(() =>
+            expect(readsOf(from, 'commits.index')).toHaveLength(1),
+        );
+        expect(
+            urlsSince(from).some((url) =>
+                /insights|branches|github-issues/.test(url),
+            ),
+        ).toBe(false);
+        expect(readsOf(from, 'pull-requests.index').length).toBeLessThanOrEqual(
+            1,
         );
     });
 });

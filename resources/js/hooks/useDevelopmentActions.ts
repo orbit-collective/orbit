@@ -3,6 +3,7 @@ import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useCallback, useState } from 'react';
 import { useAlert } from '@/context/AlertContext';
 import { requestErrorMessage } from '@/hooks/useDevelopmentResource';
+import { DevelopmentKind } from '@/types/Development';
 
 /**
  * The writes of the Development view: close or reopen a pull request, link or
@@ -14,7 +15,8 @@ import { requestErrorMessage } from '@/hooks/useDevelopmentResource';
 export function useDevelopmentActions(
     projectId: number,
     repositoryId: number | null,
-    onChanged: () => void,
+    /** Which kinds of data the write made stale, so only those are read again. */
+    onChanged: (kinds: DevelopmentKind[]) => void,
 ) {
     const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
@@ -24,12 +26,13 @@ export function useDevelopmentActions(
         async (
             request: () => Promise<unknown>,
             success: string,
+            kinds: DevelopmentKind[],
         ): Promise<boolean> => {
             setBusy(true);
             try {
                 await request();
                 addAlert(success, 'success');
-                onChanged();
+                onChanged(kinds);
                 return true;
             } catch (error) {
                 addAlert(
@@ -58,6 +61,7 @@ export function useDevelopmentActions(
                 state === 'closed'
                     ? t('development_actions.closed', { number })
                     : t('development_actions.reopened', { number }),
+                ['pulls'],
             ),
         [projectId, repositoryId, run, t],
     );
@@ -85,6 +89,7 @@ export function useDevelopmentActions(
                         },
                     ),
                 t('development_actions.merged', { number }),
+                ['pulls', 'commits'],
             ),
         [projectId, repositoryId, run, t],
     );
@@ -104,6 +109,7 @@ export function useDevelopmentActions(
                         { repository_id: repositoryId, issue_id: issueId },
                     ),
                 t('development_actions.linked', { number }),
+                ['pulls'],
             ),
         [projectId, repositoryId, run, t],
     );
@@ -120,6 +126,7 @@ export function useDevelopmentActions(
                         { params: { repository_id: repositoryId } },
                     ),
                 t('development_actions.unlinked', { number }),
+                ['pulls'],
             ),
         [projectId, repositoryId, run, t],
     );
@@ -139,6 +146,7 @@ export function useDevelopmentActions(
                         },
                     ),
                 t('development_actions.branch_created', { name }),
+                ['branches'],
             ),
         [projectId, repositoryId, run, t],
     );

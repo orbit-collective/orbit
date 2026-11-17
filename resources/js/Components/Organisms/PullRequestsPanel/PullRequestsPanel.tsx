@@ -12,6 +12,7 @@ import PullRequestRow from '@/Components/Molecules/PullRequestRow/PullRequestRow
 import LinkIssueModal from '@/Components/Organisms/LinkIssueModal/LinkIssueModal';
 import { useStoredChoice } from '@/hooks/useStoredChoice';
 import {
+    CiSummary,
     DevelopmentOverview,
     DevelopmentPullRequest,
 } from '@/types/Development';
@@ -61,6 +62,8 @@ interface PullRequestsPanelProps {
     version: number;
     busy: boolean;
     onSetState: (number: number, state: 'open' | 'closed') => void;
+    /** The checks a pull request's own detail read fresh. */
+    onChecks?: (sha: string, ci: CiSummary | null) => void;
     onMerge: (
         number: number,
         options: MergeOptions,
@@ -103,6 +106,7 @@ export default function PullRequestsPanel({
     busy,
     onSetState,
     onMerge,
+    onChecks,
     onLinkIssue,
     onUnlinkIssue,
     className,
@@ -265,6 +269,7 @@ export default function PullRequestsPanel({
                                     onSetState={(state) =>
                                         onSetState(pullRequest.number, state)
                                     }
+                                    onChecks={onChecks}
                                     onMerge={(options) =>
                                         onMerge(
                                             pullRequest.number,

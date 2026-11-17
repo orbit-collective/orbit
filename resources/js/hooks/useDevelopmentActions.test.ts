@@ -58,7 +58,8 @@ describe('useDevelopmentActions', () => {
             'Reopened pull request #7.',
             'success',
         );
-        expect(onChanged).toHaveBeenCalledTimes(2);
+        expect(onChanged).toHaveBeenNthCalledWith(1, ['pulls']);
+        expect(onChanged).toHaveBeenNthCalledWith(2, ['pulls']);
     });
 
     test('merging posts the method, the title and the head commit, and toasts', async () => {

@@ -9,6 +9,7 @@ import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import StatusPill from '@/Components/Atoms/StatusPill/StatusPill';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
+import { MergeOptions } from '@/Components/Molecules/PullRequestMergeForm/PullRequestMergeForm';
 import BranchesPanel from '@/Components/Organisms/BranchesPanel/BranchesPanel';
 import CommitsPanel from '@/Components/Organisms/CommitsPanel/CommitsPanel';
 import CreateBranchModal from '@/Components/Organisms/CreateBranchModal/CreateBranchModal';
@@ -31,7 +32,9 @@ import {
     DevelopmentBranch,
     DevelopmentCommit,
     DevelopmentGithubIssue,
+    DEVELOPMENT_KINDS,
     DevelopmentInsights,
+    DevelopmentKind,
     DevelopmentOverview,
 } from '@/types/Development';
 import { Project } from '@/types/Projects';
@@ -215,19 +218,51 @@ function DevelopmentBoard({
         [loadedPullRequests, ci.summaries],
     );
 
-    const { reload: reloadPullRequests } = pullRequests;
+    const {
+        reload: reloadPullRequests,
+        refreshFirstPage,
+        patch: patchPullRequest,
+    } = pullRequests;
     const { reload: reloadInsights } = insights;
     const { reload: reloadBranches } = branches;
     const { reload: reloadCommits } = commits;
     const { reload: reloadGithubIssues } = githubIssues;
-    const { reload: reloadCi } = ci;
+    const { refresh: refreshCi, set: setCi } = ci;
+
+    // Reads again only what changed: a merge needs the newest page of pull
+    // requests and the commits, not the statistics, the branches or the whole
+    // range. The open pull request's detail rereads too, as it may have moved.
+    const reloadKinds = useCallback(
+        (kinds: readonly DevelopmentKind[]) => {
+            const wants = new Set(kinds);
+            if (wants.has('pulls')) {
+                refreshFirstPage();
+                setVersion((current) => current + 1);
+            }
+            if (wants.has('checks')) refreshCi();
+            if (wants.has('commits')) reloadCommits();
+            if (wants.has('branches')) reloadBranches();
+            if (wants.has('issues')) reloadGithubIssues();
+            if (wants.has('insights')) reloadInsights();
+        },
+        [
+            refreshFirstPage,
+            refreshCi,
+            reloadCommits,
+            reloadBranches,
+            reloadGithubIssues,
+            reloadInsights,
+        ],
+    );
+
+    // The refresh button starts over: the whole range, everything.
     const reloadAll = useCallback(() => {
         reloadPullRequests();
         reloadInsights();
         reloadBranches();
         reloadCommits();
         reloadGithubIssues();
-        reloadCi();
+        refreshCi();
         setVersion((current) => current + 1);
     }, [
         reloadPullRequests,
@@ -235,10 +270,50 @@ function DevelopmentBoard({
         reloadBranches,
         reloadCommits,
         reloadGithubIssues,
-        reloadCi,
+        refreshCi,
     ]);
 
-    const actions = useDevelopmentActions(project.id, repository.id, reloadAll);
+    const actions = useDevelopmentActions(
+        project.id,
+        repository.id,
+        reloadKinds,
+    );
+
+    // A write is shown at once (the pull request moves to merged or closed
+    // before GitHub has been asked again); the reload that follows confirms it.
+    const setPullRequestState = async (
+        number: number,
+        state: 'open' | 'closed',
+    ) => {
+        const worked = await actions.setPullRequestState(number, state);
+        if (worked) {
+            patchPullRequest(number, {
+                state,
+                closedAt: state === 'closed' ? new Date().toISOString() : null,
+                updatedAt: new Date().toISOString(),
+            });
+        }
+
+        return worked;
+    };
+    const mergePullRequest = async (
+        number: number,
+        options: MergeOptions,
+        headSha: string,
+    ) => {
+        const worked = await actions.mergePullRequest(number, options, headSha);
+        if (worked) {
+            const now = new Date().toISOString();
+            patchPullRequest(number, {
+                state: 'merged',
+                mergedAt: now,
+                closedAt: now,
+                updatedAt: now,
+            });
+        }
+
+        return worked;
+    };
 
     const refresh = async () => {
         setRefreshing(true);
@@ -252,12 +327,20 @@ function DevelopmentBoard({
         setRefreshing(false);
     };
 
-    // Other people's changes (and GitHub's own events) reload the view; with
-    // no socket it polls, and a slow sweep covers what is never announced.
+    // Other people's changes (and GitHub's own events) reload just the kinds
+    // of data they touched; with no socket it polls the light way (the newest
+    // page, the checks), and a slow sweep covers what is never announced.
     useDevelopmentLive(project.id, {
-        onChange: reloadAll,
-        onPoll: reloadAll,
-        onSafetyRefresh: () => void refresh(),
+        onChange: reloadKinds,
+        onPoll: () => reloadKinds(DEVELOPMENT_KINDS),
+        onSafetyRefresh: async () => {
+            try {
+                await axios.post(route_('refresh'));
+            } catch {
+                // Reading again still works, from the cache at worst.
+            }
+            reloadKinds(DEVELOPMENT_KINDS);
+        },
     });
 
     const repositoryOptions = useMemo(
@@ -441,8 +524,11 @@ function DevelopmentBoard({
                         githubLinked={githubLinked}
                         version={version}
                         busy={actions.busy}
-                        onSetState={actions.setPullRequestState}
-                        onMerge={actions.mergePullRequest}
+                        onSetState={(number, state) =>
+                            void setPullRequestState(number, state)
+                        }
+                        onMerge={mergePullRequest}
+                        onChecks={setCi}
                         onLinkIssue={actions.linkIssue}
                         onUnlinkIssue={actions.unlinkIssue}
                     />

@@ -13,6 +13,7 @@ import PullRequestMergeForm, {
 } from '@/Components/Molecules/PullRequestMergeForm/PullRequestMergeForm';
 import { useDevelopmentResource } from '@/hooks/useDevelopmentResource';
 import {
+    CiSummary,
     DevelopmentOverview,
     DevelopmentPullRequest,
     DevelopmentPullRequestDetail,
@@ -33,6 +34,8 @@ interface PullRequestDetailProps {
     version: number;
     busy: boolean;
     onSetState: (state: 'open' | 'closed') => void;
+    /** The checks as the detail just read them (fresh): the list corrects what it shows for this commit. */
+    onChecks?: (sha: string, ci: CiSummary | null) => void;
     /** Merges with the chosen method; resolves true when it worked. */
     onMerge: (options: MergeOptions) => Promise<boolean>;
     onLinkIssue: () => void;
@@ -57,6 +60,7 @@ export default function PullRequestDetail({
     busy,
     onSetState,
     onMerge,
+    onChecks,
     onLinkIssue,
     onUnlinkIssue,
 }: PullRequestDetailProps) {
@@ -70,6 +74,13 @@ export default function PullRequestDetail({
             { repository_id: repositoryId },
             t('pull_request_detail.failed'),
         );
+
+    // The detail reads the checks fresh; if the list showed them as still
+    // running (or not at all) it learns the truth from here.
+    const headSha = pullRequest.headSha;
+    useEffect(() => {
+        if (data) onChecks?.(headSha, data.ci);
+    }, [data, headSha, onChecks]);
 
     // A change made from here (or elsewhere in the view) reads it again.
     const seenVersion = useRef(version);

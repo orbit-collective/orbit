@@ -376,4 +376,16 @@ describe('PullRequestDetail', () => {
             screen.queryByRole('button', { name: 'Merge' }),
         ).not.toBeInTheDocument();
     });
+
+    test('hands the checks it just read fresh to the list, which may have been showing them as still running', async () => {
+        const onChecks = vi.fn();
+        renderDetail({ onChecks });
+
+        await screen.findByText('+120');
+
+        expect(onChecks).toHaveBeenCalledWith(
+            'abc1234def',
+            expect.objectContaining({ state: 'passed' }),
+        );
+    });
 });

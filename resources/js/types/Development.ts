@@ -142,3 +142,21 @@ export interface DevelopmentGithubIssue {
     updatedAt: string;
     closedAt: string | null;
 }
+
+/** The kinds of data the view reads, which a change can make stale one by one. */
+export type DevelopmentKind =
+    | 'pulls'
+    | 'checks'
+    | 'commits'
+    | 'branches'
+    | 'issues'
+    | 'insights';
+
+export const DEVELOPMENT_KINDS: readonly DevelopmentKind[] = [
+    'pulls',
+    'checks',
+    'commits',
+    'branches',
+    'issues',
+    'insights',
+];
