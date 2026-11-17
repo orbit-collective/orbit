@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.16.0](https://github.com/orbit-collective/orbit/compare/v0.15.4...v0.16.0) (2026-11-17)
+
+
+### Features
+
+* **github:** give the project page a development prop and an issue picker ([91dd444](https://github.com/orbit-collective/orbit/commit/91dd444327b75b39e3c7dce17a148fb23f6ceea4))
+* **github:** link a pull request to several issues ([83be5ce](https://github.com/orbit-collective/orbit/commit/83be5ce3f6cf429932d1cb6cd9d4fa6fa55d310e))
+* **github:** merge a pull request from the development view ([423ffb1](https://github.com/orbit-collective/orbit/commit/423ffb125573aab413f3fb73f9e476d9634d358c))
+* **github:** serve a repository's GitHub issues to the development view ([5423c0f](https://github.com/orbit-collective/orbit/commit/5423c0f72bcd31205e735795aa4e6c89e3d34c55))
+* **github:** serve the development view data to the browser ([6e083f5](https://github.com/orbit-collective/orbit/commit/6e083f50da9ec67dc5d8dee0750de16a546961fb))
+* **live:** announce development changes over the project channel ([3a0725c](https://github.com/orbit-collective/orbit/commit/3a0725c604c30a250fa5c5a44a0a25585767cc60))
+* **permissions:** add the github development view permissions ([79eb947](https://github.com/orbit-collective/orbit/commit/79eb947788b2dd10cd1364b2f1b4a9b1e8494759))
+* **ui:** add the building blocks of the development view ([f3d0199](https://github.com/orbit-collective/orbit/commit/f3d0199480d4ffa29d125a6d4cfdf3547c46b867))
+* **ui:** add the development view panels and dialogs ([7b6bdcd](https://github.com/orbit-collective/orbit/commit/7b6bdcdc4fe443fbfe9817d2a32f71ce31edf8bf))
+* **ui:** add the settings and the incremental data hooks of the development view ([9746050](https://github.com/orbit-collective/orbit/commit/97460508a1612072131a07e30a3ae2e0875e5be5))
+* **ui:** draw the pull request filters as icons ([6a2efbd](https://github.com/orbit-collective/orbit/commit/6a2efbda2719c8b208d899a9151162184c3bfe1f))
+* **ui:** keep the development view live over Reverb ([6efc331](https://github.com/orbit-collective/orbit/commit/6efc331068003508511e7c7c29da9649b8ccb580))
+* **ui:** let Pagination page a list in memory and look compact ([a0a3e06](https://github.com/orbit-collective/orbit/commit/a0a3e065e8dc733b3c1cac99214fb2ce22c3bf42))
+* **ui:** list the repository's GitHub issues and branch from one in a click ([a75353b](https://github.com/orbit-collective/orbit/commit/a75353bc002a7858473dc26fd9e30c87c47cf088))
+* **ui:** load the development view in pieces and make it configurable ([7420397](https://github.com/orbit-collective/orbit/commit/7420397fbeeafcc02d814cacb269dd989124bcf6))
+* **ui:** merge a pull request from its detail ([5865cdb](https://github.com/orbit-collective/orbit/commit/5865cdb1bf55ed1aa0cb73b91bbb0a34bc16bed9))
+* **ui:** open the development view from the project page ([ad29f60](https://github.com/orbit-collective/orbit/commit/ad29f600c3833e6678bcbcb6fe42171c2119c217))
+* **ui:** redesign merging a pull request as its own card ([8b39187](https://github.com/orbit-collective/orbit/commit/8b3918703663192d9e32f9ff47e09e1d686019fc))
+
+
+### Bug Fixes
+
+* **github:** comment on a pull request when an issue is linked from the view ([5cc1506](https://github.com/orbit-collective/orbit/commit/5cc150675a7ca2b1dd2f2ad094e5cf00acf41aa1))
+* **github:** read branches a page at a time with their real total ([5ec5f76](https://github.com/orbit-collective/orbit/commit/5ec5f76954dccaf1820259c74643225c865da790))
+* **i18n:** call the development view "Rozwój" in Polish ([cbd79af](https://github.com/orbit-collective/orbit/commit/cbd79af3aa9b69dfc5b1315f5f4550f8b5f764f8))
+* **ui:** make the compact Pagination answer to its own width ([3f5ad1a](https://github.com/orbit-collective/orbit/commit/3f5ad1a0ef60c933b86bfe585bf23aeb8ab58c87))
+* **ui:** page through branches and pull requests in the development view ([607496f](https://github.com/orbit-collective/orbit/commit/607496f56f5651c9a86960e6457d67ec558ca8f2))
+* **ui:** show skeletons instead of stale data in the development view ([0f2da3f](https://github.com/orbit-collective/orbit/commit/0f2da3f1be03b013fc80214d9b7896aba832f92d))
+
+
+### Performance Improvements
+
+* **github:** cache the development reads per kind and the checks per commit ([a4758e6](https://github.com/orbit-collective/orbit/commit/a4758e679139027032f0c86e3f33a1c575f6c607))
+* **github:** read the development view in smaller, cheaper pieces ([2ab3c8a](https://github.com/orbit-collective/orbit/commit/2ab3c8ae835125347913b0608a93e935bf53344a))
+* **ui:** read only what changed in the development view ([2878ecb](https://github.com/orbit-collective/orbit/commit/2878ecb3f4f5891b536487560686c2092487df7b))
+
 ## [0.15.4](https://github.com/orbit-collective/orbit/compare/v0.15.3...v0.15.4) (2026-11-16)
 
 
