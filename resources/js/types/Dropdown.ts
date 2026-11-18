@@ -45,7 +45,7 @@ export interface DropdownOptionItem {
     children?: DropdownOptionItem[];
 }
 
-export interface DropdownTriggerState {
+interface DropdownTriggerState {
     isOpen: boolean;
 }
 

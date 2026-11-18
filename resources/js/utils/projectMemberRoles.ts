@@ -3,7 +3,7 @@ import {
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
 
-export const ROLE_LABELS: Record<ProjectMemberRole, string> = {
+const ROLE_LABELS: Record<ProjectMemberRole, string> = {
     owner: 'Owner',
     admin: 'Admin',
     member: 'Member',
@@ -11,7 +11,7 @@ export const ROLE_LABELS: Record<ProjectMemberRole, string> = {
 };
 
 /** Translation keys of the role names, for `t()`. */
-export const ROLE_LABEL_KEYS: Record<ProjectMemberRole, string> = {
+const ROLE_LABEL_KEYS: Record<ProjectMemberRole, string> = {
     owner: 'util_project_member_roles.owner',
     admin: 'util_project_member_roles.admin',
     member: 'util_project_member_roles.member',

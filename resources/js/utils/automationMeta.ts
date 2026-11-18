@@ -15,7 +15,7 @@ export interface AutomationNodeMeta {
  * server-side never breaks this UI, it just looks generic until given its
  * own entry.
  */
-export const TRIGGER_META: Record<string, AutomationNodeMeta> = {
+const TRIGGER_META: Record<string, AutomationNodeMeta> = {
     'issue.status_changed': {
         icon: 'ArrowRightLeft',
         color: 'var(--info-color)',
@@ -42,7 +42,7 @@ export const TRIGGER_META: Record<string, AutomationNodeMeta> = {
     },
 };
 
-export const ACTION_META: Record<string, AutomationNodeMeta> = {
+const ACTION_META: Record<string, AutomationNodeMeta> = {
     change_status: { icon: 'Workflow', color: 'var(--info-color)' },
     change_priority: { icon: 'Flame', color: 'var(--warning-color)' },
     assign_user: { icon: 'UserPlus', color: 'var(--accent-color)' },

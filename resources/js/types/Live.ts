@@ -20,7 +20,7 @@ export type LiveStatus = 'off' | 'connecting' | 'live' | 'offline';
 /** The enabled shape of `LiveConfig`, i.e. what Echo needs to connect. */
 export type LiveConnection = Extract<LiveConfig, { enabled: true }>;
 
-export type ProjectChangeAction = 'created' | 'updated' | 'deleted' | 'bulk';
+type ProjectChangeAction = 'created' | 'updated' | 'deleted' | 'bulk';
 
 /** One entry of a `project.changed` event; `id` is null for bulk changes. */
 export interface ProjectChange {

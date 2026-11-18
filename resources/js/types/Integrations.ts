@@ -56,9 +56,9 @@ export interface IntegrationPreviewSample {
  * 'github' is a GitHub App installation flow (no fields to fill in) — see
  * WorkspaceSettingsGithubConnectPanel.
  */
-export type IntegrationKind = 'notify' | 'import' | 'github';
+type IntegrationKind = 'notify' | 'import' | 'github';
 
-export interface IntegrationImportCredentialField {
+interface IntegrationImportCredentialField {
     id: string;
     label: string;
     type: 'text' | 'email' | 'password' | 'url';
@@ -76,7 +76,7 @@ export type IntegrationFieldMappingType =
  * fields to collect on connect, and which of Orbit's fixed fields need a
  * mapping UI against the remote system's configurable values.
  */
-export interface IntegrationImportConfig {
+interface IntegrationImportConfig {
     credentialFields: IntegrationImportCredentialField[];
     mappingTypes: IntegrationFieldMappingType[];
 }

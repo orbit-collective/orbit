@@ -1,6 +1,6 @@
 import { WorkflowStatusCategory } from '@/types/Workflow';
 
-export type IssueCategoryCounts = Record<WorkflowStatusCategory, number>;
+type IssueCategoryCounts = Record<WorkflowStatusCategory, number>;
 
 export interface Project {
     id: number;

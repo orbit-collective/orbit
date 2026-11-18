@@ -40,7 +40,7 @@ const matches = (handler: NetworkHandler, request: NetworkRequest): boolean => {
         : handler.url.test(request.url);
 };
 
-export class NetworkError extends Error {
+class NetworkError extends Error {
     readonly isAxiosError = true;
     readonly response: { status: number; data: unknown };
 
@@ -111,6 +111,6 @@ export const installFetchMock = (): void => {
     }) as typeof globalThis.fetch;
 };
 
-export const restoreFetch = (): void => {
+const restoreFetch = (): void => {
     if (originalFetch) globalThis.fetch = originalFetch;
 };
