@@ -1,10 +1,5 @@
-import { useCallback, useEffect } from 'react';
-import { LiveReload, pauseLiveReloads, requestLiveReload } from './reloadQueue';
-
-/** `reload(...)` asks for a coalesced refresh of the given props. */
-function useLiveReload(): (reload: LiveReload) => void {
-    return useCallback((reload) => requestLiveReload(reload), []);
-}
+import { useEffect } from 'react';
+import { pauseLiveReloads } from './reloadQueue';
 
 /** While `paused` is true no live reload runs; queued ones run when it ends. */
 export function useLivePause(paused: boolean): void {

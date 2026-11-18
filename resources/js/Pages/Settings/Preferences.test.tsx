@@ -39,9 +39,5 @@ describe('Settings SettingsPreferences page', () => {
         const layout = screen.getByTestId('layout');
         expect(layout).toHaveAttribute('data-tab-id', 'preferences');
         expect(layout).toHaveAttribute('data-projects-count', '1');
-
-        const tabProps = JSON.parse(
-            screen.getByTestId('tab').getAttribute('data-props') ?? '{}',
-        );
     });
 });
