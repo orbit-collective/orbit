@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ShowcaseDots } from '@/Components/Atoms/ShowcaseDots/ShowcaseDots';
 
 /** `text` and `highlightText` are translation keys. */
-export interface ShowcaseSlide {
+interface ShowcaseSlide {
     text: string;
     highlightText: string;
 }

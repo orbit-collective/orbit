@@ -5,7 +5,7 @@ import { useLiveChannel } from './useLiveChannel';
 import { useLiveFallback } from './useLiveFallback';
 
 /** Most project channels one dashboard listens to, a guard for very large workspaces. */
-export const DASHBOARD_MAX_CHANNELS = 25;
+const DASHBOARD_MAX_CHANNELS = 25;
 
 /**
  * Refresh the dashboard's counters, trend and feed when a project of the user

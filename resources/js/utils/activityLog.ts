@@ -5,12 +5,7 @@ import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 export const ACTIVITY_PAGE_PARAM = 'activityPage';
 export const ACTIVITY_PER_PAGE_PARAM = 'activityPerPage';
 
-export type ActivityLogColor =
-    | 'accent'
-    | 'success'
-    | 'warning'
-    | 'error'
-    | 'info';
+type ActivityLogColor = 'accent' | 'success' | 'warning' | 'error' | 'info';
 
 interface ActivityLogVisual {
     icon: keyof typeof icons;

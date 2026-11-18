@@ -4,7 +4,7 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = 'en';
 
-export const LOCALE_STORAGE_KEY = 'locale';
+const LOCALE_STORAGE_KEY = 'locale';
 
 export const LOCALE_NAMES: Record<Locale, string> = {
     en: 'English',

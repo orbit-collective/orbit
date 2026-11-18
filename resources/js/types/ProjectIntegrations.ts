@@ -12,14 +12,14 @@ export interface IntegrationMappingOption {
     label: string;
 }
 
-export interface IntegrationMappingMetadata {
+interface IntegrationMappingMetadata {
     statuses: IntegrationMappingOption[];
     priorities: IntegrationMappingOption[];
     issueTypes: IntegrationMappingOption[];
     labels?: IntegrationMappingOption[];
 }
 
-export interface IntegrationFieldMapping {
+interface IntegrationFieldMapping {
     mappingType: IntegrationFieldMappingType;
     externalValue: string;
     externalLabel: string | null;
@@ -39,7 +39,7 @@ export interface IntegrationFieldMappingDraft {
     orbit_value: string;
 }
 
-export interface IntegrationLastImportResult {
+interface IntegrationLastImportResult {
     imported: number;
     updated: number;
     skipped: number;
@@ -61,7 +61,7 @@ export interface ImportIntegrationSettings {
     lastImport: IntegrationLastImportResult | null;
 }
 
-export type IntegrationImportRunStatus = 'running' | 'done' | 'failed';
+type IntegrationImportRunStatus = 'running' | 'done' | 'failed';
 
 /**
  * The live progress readout polled while an import is running — a separate,
@@ -79,7 +79,7 @@ export interface IntegrationImportProgress {
     failed: number;
 }
 
-export type GithubConnectionStatus =
+type GithubConnectionStatus =
     | 'not_connected'
     | 'pending'
     | 'connected'

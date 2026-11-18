@@ -10,7 +10,7 @@ const GROUP_META: Record<string, { label: string; icon: keyof typeof icons }> =
         developer: { label: 'Developer', icon: 'Code' },
     };
 
-export interface PermissionSection {
+interface PermissionSection {
     section: string;
     permissions: PermissionDefinition[];
 }

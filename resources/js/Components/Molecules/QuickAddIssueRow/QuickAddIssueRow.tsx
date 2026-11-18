@@ -100,7 +100,7 @@ interface QuickAddIssueRowProps {
  * follow the selected type (falling back when the type changes), and a
  * property left alone previews the default the issue will be created with.
  */
-export const QuickAddIssueRow = forwardRef<
+const QuickAddIssueRow = forwardRef<
     QuickAddIssueRowHandle,
     QuickAddIssueRowProps
 >(

@@ -24,7 +24,6 @@ import {
     Comment,
     GithubDevelopmentRepository,
     Issue,
-    IssueStats,
     IssueAbilities,
     IssueLabel,
     IssuePageLooks,
@@ -240,7 +239,7 @@ export interface WorkflowStatusBadgeProps {
     /** Shown in the shared Badge tooltip, on hover and on keyboard focus. */
     tooltip?: React.ReactNode;
 }
-export interface EditableSelectOption {
+interface EditableSelectOption {
     value: string;
     label: ReactNode;
     searchLabel?: string;
@@ -336,7 +335,7 @@ export interface FilterDropdownProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
 }
-export interface InlineSelectDropdownOption {
+interface InlineSelectDropdownOption {
     value: string;
     label: string;
     /** lucide-react icon name, rendered before the label when present. */
@@ -601,7 +600,7 @@ export interface AuthFormHeaderProps {
     title: string;
     description: string;
 }
-export interface OrbitItem {
+interface OrbitItem {
     name: keyof typeof icons;
     angle: number;
 }
@@ -830,7 +829,7 @@ export interface NewProjectModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
-export interface PageHeaderTab {
+interface PageHeaderTab {
     id: string;
     label: string;
     icon: keyof typeof icons;

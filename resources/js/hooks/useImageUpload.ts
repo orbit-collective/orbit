@@ -62,5 +62,3 @@ const resolveUploadError = (
 
     return t('hook_image_upload.failed');
 };
-
-export default useImageUpload;

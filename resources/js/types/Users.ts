@@ -1,6 +1,6 @@
 import type { WorkflowStatus } from '@/types/Workflow';
 
-export interface User {
+interface User {
     id: number;
     name: string;
     email: string;
@@ -33,7 +33,7 @@ export interface UserPreview {
     recentIssues: UserPreviewIssue[];
 }
 
-export interface UserPreviewIssue {
+interface UserPreviewIssue {
     id: number;
     number: number;
     title: string;

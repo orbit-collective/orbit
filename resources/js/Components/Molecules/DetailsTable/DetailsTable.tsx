@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { cn } from '@/utils/cn';
 
-export interface DetailsTableRow {
+interface DetailsTableRow {
     icon: keyof typeof icons;
     label: string;
     value: ReactNode;

@@ -9,7 +9,7 @@ interface AccountSettingsHomeViewCardProps {
     accentClassName: string;
 }
 
-export default function AccountSettingsHomeViewCard({
+function AccountSettingsHomeViewCard({
     title,
     icon,
     selected,

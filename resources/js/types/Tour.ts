@@ -20,7 +20,7 @@ export interface TourContext {
  * - `free` — the user may poke at the target (e.g. pick a color); the arrow
  *   simply moves on.
  */
-export type TourInteraction =
+type TourInteraction =
     | {
           type: 'click';
           hint: string /* translation key */;
@@ -29,7 +29,7 @@ export type TourInteraction =
     | { type: 'input'; hint: string /* translation key */; required?: boolean }
     | { type: 'free'; hint: string /* translation key */ };
 
-export interface TourRuntime {
+interface TourRuntime {
     hasProjects: boolean;
 }
 

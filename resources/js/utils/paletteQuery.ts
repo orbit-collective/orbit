@@ -1,5 +1,5 @@
 /** `>` = commands only, `#` = issues only, `@` = people only, anything else = everything. */
-export type PaletteScope = 'all' | 'commands' | 'issues' | 'people';
+type PaletteScope = 'all' | 'commands' | 'issues' | 'people';
 
 export interface ParsedPaletteQuery {
     scope: PaletteScope;
@@ -13,7 +13,7 @@ export interface ParsedPaletteQuery {
     serverQuery: string | null;
 }
 
-export const MIN_TEXT_LENGTH = 2;
+const MIN_TEXT_LENGTH = 2;
 export const MAX_QUERY_LENGTH = 100;
 
 export const parsePaletteQuery = (raw: string): ParsedPaletteQuery => {

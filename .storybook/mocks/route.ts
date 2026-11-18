@@ -16,7 +16,7 @@ const paramSegments = (params?: RouteParams): string[] => {
     return [String(params)];
 };
 
-export const routeMock = ((name?: string, params?: RouteParams) => {
+const routeMock = ((name?: string, params?: RouteParams) => {
     if (name === undefined) {
         // `route()` with no arguments returns Ziggy's router object.
         return { current: () => false, has: () => true, params: {} };

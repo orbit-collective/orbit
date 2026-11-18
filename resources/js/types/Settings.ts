@@ -1,6 +1,6 @@
 import type { icons } from 'lucide-react';
 
-export type SettingsSectionId = 'account' | 'workspace' | 'developer';
+type SettingsSectionId = 'account' | 'workspace' | 'developer';
 
 export type SettingsTabId =
     | 'preferences'

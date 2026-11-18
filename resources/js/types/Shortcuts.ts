@@ -1,4 +1,4 @@
-export type ShortcutAction = () => void;
+type ShortcutAction = () => void;
 
 export type ShortcutScope = 'global' | 'project' | 'issue';
 
