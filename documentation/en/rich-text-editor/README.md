@@ -57,13 +57,7 @@ serializer itself, `html: false` so pasted/typed HTML never leaks
 into the stored markdown), `Placeholder`, `TaskList`/`TaskItem`,
 `TableKit`, and `Image` — is the single place that decides what
 formatting is possible; nothing else in the app has its own separate
-Tiptap configuration. A **separate** rendering path,
-`react-markdown`/`remark-gfm` (see
-[`../architecture/01-tech-stack-and-project-structure.md`](../architecture/01-tech-stack-and-project-structure.md)),
-handles markdown that's never editable at all (the integrations
-catalog's static `overview` field) — don't reach for Tiptap for
-read-only markdown display; it's a heavier tool for a job
-`react-markdown` already does.
+Tiptap configuration.
 
 Mentions are the other exception, though they stay inside the
 `TEXT` column: when `users`/`projectId` are passed, two extra nodes

@@ -31,9 +31,7 @@ summary.
 | `tailwind-scrollbar` | The `.no-scrollbar` utility and related scrollbar styling |
 | `lucide-react` | Every icon in the app, wrapped by `Components/Atoms/Icon` |
 | `framer-motion` | Every enter/exit animation — e.g. the alert stack's `AnimatePresence` (see `AlertContainer.tsx`) |
-| `class-variance-authority`, `@headlessui/react` | Accessible unstyled primitives (dropdowns/dialogs) underneath some Atoms/Molecules |
 | `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-*`, `tiptap-markdown` | The rich-text issue-description/comment editor — see `Components/Molecules/EditableMarkdown` and [`../rich-text-editor/README.md`](../rich-text-editor/README.md) |
-| `react-markdown` + `remark-gfm` | Renders **read-only** markdown (e.g. an integration's `overview` field in the catalog modal) — a different code path from Tiptap, which is for *editing* |
 | `@dnd-kit/core` + `@dnd-kit/utilities` | Drag-and-drop, e.g. moving a card between columns on the Kanban board view |
 | `@sentry/react` | Frontend error monitoring — initialized in `app.tsx`, reports uncaught frontend exceptions when `VITE_SENTRY_DSN` is set |
 | `axios` | HTTP client Inertia's `router` uses under the hood — rarely called directly |

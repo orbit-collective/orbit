@@ -26,9 +26,7 @@ Główny [`README.md`](../../../README.md#tech-stack) ma sztandarową tabelę st
 | `tailwind-scrollbar` | Utility `.no-scrollbar` i powiązane stylowanie scrollbara |
 | `lucide-react` | Każda ikona w aplikacji, owinięta przez `Components/Atoms/Icon` |
 | `framer-motion` | Każda animacja wejścia/wyjścia — np. `AnimatePresence` stosu alertów (zobacz `AlertContainer.tsx`) |
-| `class-variance-authority`, `@headlessui/react` | Dostępne, niestylowane prymitywy (dropdowny/dialogi) pod niektórymi Atoms/Molecules |
 | `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-*`, `tiptap-markdown` | Edytor rich-text dla opisu issue/komentarzy — zobacz `Components/Molecules/EditableMarkdown` i [`../rich-text-editor/README.md`](../rich-text-editor/README.md) |
-| `react-markdown` + `remark-gfm` | Renderuje markdown **tylko do odczytu** (np. pole `overview` integracji w modalu katalogu) — inna ścieżka kodu niż Tiptap, który jest do *edycji* |
 | `@dnd-kit/core` + `@dnd-kit/utilities` | Drag-and-drop, np. przenoszenie karty między kolumnami w widoku tablicy Kanban |
 | `@sentry/react` | Monitoring błędów frontendu — inicjalizowany w `app.tsx`, raportuje nieprzechwycone wyjątki frontendu, gdy ustawiony jest `VITE_SENTRY_DSN` |
 | `axios` | Klient HTTP, którego `router` Inertii używa pod spodem — rzadko wywoływany bezpośrednio |
