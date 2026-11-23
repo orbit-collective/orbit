@@ -79,7 +79,7 @@
         "lucide-react": "^1.73.0",
         "pusher-js": "^8.6.0",
         "react-colorful": "^5.8.1",
-        "tailwind-merge": "^3.7.0",
+        "tailwind-merge": "^3.7.1",
         "tailwind-scrollbar": "^4.0.2",
         "tiptap-markdown": "^0.9.0"
     }
