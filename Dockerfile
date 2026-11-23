@@ -11,7 +11,7 @@
 # -----------------------------------------------------------------------------
 # PHP / Laravel application
 # -----------------------------------------------------------------------------
-FROM php:8.5-cli AS php
+FROM php:8.6-cli AS php
 
 # System libraries + PHP extensions required by Laravel and SQLite.
 # pcntl is required by Laravel Reverb (signal handling in `reverb:start`).
